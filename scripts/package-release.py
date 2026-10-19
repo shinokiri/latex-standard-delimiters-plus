@@ -1,75 +1,80 @@
-"""Package only a fully verified candidate. Run from the source package."""
+"""Build release assets and record the actual automated verification scope."""
 from pathlib import Path
-import hashlib, json, zipfile
+import datetime
+import hashlib
+import json
+import re
+import subprocess
+import zipfile
 
 root = Path(__file__).resolve().parents[1]
-manifest = json.loads((root / "manifest.json").read_text())
-version = manifest["version"]
-suite = json.loads((root / "suite-report.json").read_text())
+dist = root / 'dist'
+dist.mkdir(exist_ok=True)
+result = subprocess.run(['npm', 'run', 'check'], cwd=root, text=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+(dist / 'verification.log').write_text(result.stdout)
+print(result.stdout, end='')
+if result.returncode:
+    raise SystemExit(result.returncode)
+
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
-required = {"navigation", "runtime", "editing-preview", "beta-audit", "typing-compatibility", "compatibility", "input-comfort", "composition-ownership", "panes-comfort", "upstream-coexistence", "popout", "swift-coexistence", "vim", "edit-performance", "theme-narrow", "container-editing", "container-variants", "euler-callout"}
-stress = json.loads((root / "stress-suite-report.json").read_text())
-native = json.loads((root / "native-daily-keyboard-report.json").read_text())
-baseline = json.loads((root / "cross-section-baseline-report.json").read_text())
-reading_perf = json.loads((root / "reading-revision-performance-report.json").read_text())
-native_cross = json.loads((root / "native-cross-section-report.json").read_text())
-reading_popout = json.loads((root / "reading-revision-popout-report.json").read_text())
-native_layout = json.loads((root / "native-layout-report.json").read_text())
-equation_reports = [
-    ("equation-layout", 102),
-    ("equation-diagnostics", 26),
-    ("native-equation-diagnostics", 5),
-    ("matrix-rendering", 22),
-    ("source-typography", 23),
-]
-checks = [
-    (native_layout.get("version") == version and native_layout.get("mainJsSha256") == digest(root / "main.js") and native_layout.get("stylesSha256") == digest(root / "styles.css") and {r.get("key") for r in native_layout.get("results", []) if r.get("trusted") and r.get("entered") and r.get("sourcePreserved")} == {"ArrowUp", "ArrowDown"}, "Trusted native list navigation must match and pass"),
-    (reading_popout.get("inputTrusted") is True and reading_popout.get("queuedBeforeClose") is True and reading_popout.get("passed") is True and reading_popout.get("version") == version and reading_popout.get("mainJsSha256") == digest(root / "main.js") and len(reading_popout["results"]) >= 8 and all(item["passed"] for item in reading_popout["results"]), "Trusted queued popout-close evidence must match and pass"),
-    (reading_perf.get("passed") is True and reading_perf.get("version") == version and reading_perf.get("mainJsSha256") == digest(root / "main.js") and len(reading_perf["results"]) >= 17 and all(item["passed"] for item in reading_perf["results"]), "Reading revision performance and scroll evidence must match and pass"),
-    (native_cross.get("passed") is True and native_cross.get("version") == version and native_cross.get("mainJsSha256") == digest(root / "main.js") and len(native_cross["results"]) >= 6 and all(item["passed"] for item in native_cross["results"]), "Trusted native cross-section edits must match and pass"),
-    (baseline.get("version") == "0.4.4" and baseline.get("mainJsSha256") == "ad9db8104895e4fe5a61609baa3390ef9ff559d30f52fe9bc3c9324a090c9dd2" and any(item.get("name") == "Closing paragraph edit" and item.get("passed") is False and item.get("expected") == "3215" and item.get("actual") == "3214" for item in baseline["results"]), "Released-build failing regression must be recorded"),
-    (native.get("version") == version and native.get("mainJsSha256") == digest(root / "main.js") and len(native["results"]) >= 9 and all(item["passed"] for item in native["results"]), "Native keyboard checks must match and pass"),
-    (stress.get("passed") is True and all(item["count"] > 0 and not item["failures"] for item in stress["reports"]), "Stress suite must pass with nonempty checks"),
-    (stress.get("version") == version and stress.get("mainJsSha256") == digest(root / "main.js"), "Stress evidence must match candidate"),
-    ({item["name"] for item in stress["reports"]} == {"cross-section-editing", "boundary-stress", "daily-editing", "stress-rendering", "stress-lifecycle", "stress-volume"}, "All stress suites are required"),
 
-    (suite.get("passed") is True, "Runtime suite must pass"),
-    (suite.get("version") == version, "Runtime suite version must match candidate"),
-    (suite.get("mainJsSha256") == digest(root / "main.js"), "main.js hash must match"),
-    (suite.get("stylesSha256") == digest(root / "styles.css"), "styles.css hash must match"),
-    (required == {item["name"] for item in suite["reports"]}, "All final suites are required"),
-    (all(item["count"] > 0 and not item["failures"] for item in suite["reports"]), "All assertions must pass"),
-    ("Local verification: complete" in (root / "COMPLETION-AUDIT.md").read_text(), "Local verification audit is not complete"),
-]
-for name, minimum in equation_reports:
-    report = json.loads((root / (name + "-report.json")).read_text())
-    checks.append((
-        report.get("passed") is True and report.get("version") == version
-        and report.get("mainJsSha256") == digest(root / "main.js")
-        and report.get("stylesSha256") == digest(root / "styles.css")
-        and len(report.get("results", [])) >= minimum
-        and all(item.get("passed") is True for item in report["results"]),
-        name + " evidence must match the candidate and pass",
-    ))
-for passed, message in checks:
-    if not passed:
-        raise SystemExit("Packaging blocked: " + message)
-release_files = ["main.js", "manifest.json", "styles.css", "README.md", "LICENSE", "NOTICE.md", "Examples.md", "CHANGELOG.md", "VERIFICATION.md", "COMPATIBILITY.md", "PLATFORM-AUDIT.md", "DESKTOP-TESTING.md", "TYPING-INTEGRATION.md", "COMPLETION-AUDIT.md", "suite-report.json", "stress-suite-report.json", "STRESS-TESTING.md", "daily-editing-report.json", "boundary-stress-report.json", "cross-section-editing-report.json", "cross-section-baseline-report.json", "reading-revision-performance-report.json", "reading-revision-popout-report.json", "native-cross-section-report.json", "REVIEW-MILESTONE.md", "native-daily-keyboard-report.json"]
-release_files += ["Examples-Matrices.md", "reading-revision-popout-first-attempt-report.json", "source-typography-baseline-report.json"] + [name + "-report.json" for name, _ in equation_reports]
-release_files += ["native-layout-report.json"]
-archives = []
-for source in [False, True]:
-    target = root.parent / ("latex-standard-delimiters-" + version + ("-source" if source else "") + ".zip")
-    files = [f for f in root.rglob("*") if f.is_file() and "node_modules" not in f.parts and ".git" not in f.parts and "__pycache__" not in f.parts] if source else [root / name for name in release_files]
-    with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
-        for file in files:
-            archive.write(file, "latex-standard-delimiters/" + str(file.relative_to(root)))
+manifest = json.loads((root / 'manifest.json').read_text())
+plugin_id = manifest['id']
+assert plugin_id == 'latex-standard-delimiters-plus'
+assert manifest['isDesktopOnly'] is False
+assets = ['main.js', 'manifest.json', 'styles.css', 'README.md', 'LICENSE', 'NOTICE.md']
+imports = set(re.findall(r'require\("([^"]+)"\)', (root / 'main.js').read_text()))
+assert imports <= {'obsidian', '@codemirror/state', '@codemirror/view', '@codemirror/language'}, imports
+source_paths = sorted({p for folder in ['src', 'tests', 'scripts', '.github', 'docs']
+                       for p in (root / folder).rglob('*') if p.is_file()})
+source_paths += [root / name for name in ['manifest.json', 'package.json', 'package-lock.json',
+    'versions.json', 'tsconfig.json', 'eslint.config.mts', 'esbuild.config.mjs',
+    '.gitignore', 'README.md', 'LICENSE', 'NOTICE.md', 'CHANGELOG.md', 'CONTRIBUTING.md',
+    'RELEASING.md', 'Examples.md']]
+plain_log = re.sub(r'\x1b\[[0-9;]*m', '', result.stdout)
+counts = {}
+for key in ['tests', 'pass', 'fail', 'skipped']:
+    matches = re.findall(r'(?:ℹ |# )' + key + r' (\d+)', plain_log)
+    if matches:
+        counts[key] = int(matches[-1])
+assert counts.get('fail') == 0 and counts.get('tests', 0) >= 96, counts
+private_fixture = root / '.local-fixtures/probability-list.md'
+local_core = root / '.local-fixtures/native-codemirror.js'
+local_mathjax = root / '.local-fixtures/obsidian-mathjax.js'
+report = {
+    'id': plugin_id, 'version': manifest['version'],
+    'builtAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    'upstream': 'DicksonKam/latex-standard-delimiters@758615a (0.4.7)',
+    'checks': {'npmRunCheck': 'passed', 'tests': counts},
+    'productionImports': sorted(imports),
+    'realDeviceTested': False,
+    'testEnvironment': 'Node + markdown-it + jsdom, real CodeMirror state/view, synthetic events and DOM mutations; geometry supplied to sizing tests; Obsidian APIs mocked; editor tests use mocked or captured MathJax CHTML, plus an optional actual local MathJax compatibility test',
+    'localCompatibilityCoreSha256': digest(local_core) if local_core.exists() else None,
+    'localCompatibilityScope': 'Fourteen DOM-input/touch/source-navigation tests additionally use an isolated core extracted from the locally installed Obsidian 1.14.4 APK, including a minimal Markdown escape-hiding fixture; this is not an Android UI or keyboard test' if local_core.exists() else None,
+    'localMathJaxSha256': digest(local_mathjax) if local_mathjax.exists() else None,
+    'localMathJaxScope': 'Optional tests run 20 original expressions through the installed MathJax 4.1.3, verify annotations and actual error output, and check source navigation in the private 33-formula note when available; no layout or UI testing' if local_mathjax.exists() else None,
+    'privateFixtureAvailable': private_fixture.exists(),
+    'files': {name: digest(root / name) for name in assets},
+    'sources': {str(path.relative_to(root)): digest(path) for path in source_paths},
+}
+report_path = dist / 'verification.json'
+report_path.write_text(json.dumps(report, indent=2) + '\n')
+release_files = [root / name for name in ['main.js', 'manifest.json', 'styles.css', 'LICENSE', 'NOTICE.md']]
+release_files.append(report_path)
+for source_archive in [False, True]:
+    suffix = '-source' if source_archive else ''
+    target = dist / f"{plugin_id}-{manifest['version']}{suffix}.zip"
+    files = source_paths + [root / 'main.js', root / 'styles.css'] if source_archive else [root / name for name in assets]
+    with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as archive:
+        for path in files:
+            archive.write(path, plugin_id + '/' + str(path.relative_to(root)))
+        archive.write(report_path, plugin_id + '/verification.json')
     with zipfile.ZipFile(target) as archive:
         assert archive.testzip() is None
-        assert hashlib.sha256(archive.read("latex-standard-delimiters/main.js")).hexdigest() == suite["mainJsSha256"]
-        assert json.loads(archive.read("latex-standard-delimiters/manifest.json"))["version"] == version
-    archives.append({"file": target.name, "sha256": digest(target)})
-report = {"version": version, "mainJsSha256": suite["mainJsSha256"], "stylesSha256": suite["stylesSha256"], "runtimeChecks": sum(item["count"] for item in suite["reports"] + stress["reports"]), "archives": archives}
-(root.parent / "release-verification.json").write_text(json.dumps(report, indent=2) + "\n")
-print(json.dumps(report, indent=2))
+        assert not any('.local-fixtures' in name or 'node_modules' in name for name in archive.namelist())
+        assert hashlib.sha256(archive.read(plugin_id + '/main.js')).hexdigest() == report['files']['main.js']
+    print(json.dumps({'archive': str(target), 'sha256': digest(target)}))
+    release_files.append(target)
+(dist / 'SHA256SUMS.txt').write_text(''.join(f'{digest(path)}  {path.name}\n' for path in release_files))

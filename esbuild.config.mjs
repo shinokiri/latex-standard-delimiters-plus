@@ -5,7 +5,7 @@ const production = process.argv[2] === "production";
 
 await esbuild.build({
   banner: {
-    js: "/* LaTeX Standard Delimiters. MIT. Based on Andreas Burger's latex-delimiter-renderer. See included source, LICENSE and NOTICE.md. */"
+    js: "/* LaTeX Standard Delimiters Plus. MIT. Local fork of DicksonKam/latex-standard-delimiters, based on Andreas Burger's latex-delimiter-renderer. See LICENSE and NOTICE.md. */"
   },
   entryPoints: ["src/main.ts"],
   bundle: true,

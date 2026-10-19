@@ -18,6 +18,26 @@
   padding: 0.5em 0;
 }
 
+/* Keep the editor's list/quote prefixes in place, but give standalone display
+   math the remaining line width. display-layout measures that width after the
+   host has rendered its prefixes and when panes/fonts change size. */
+.cm-editor .lsd-math-container-display {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.5em 0;
+  vertical-align: middle;
+  text-align: center;
+  text-indent: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.lsd-math-container-display mjx-container {
+  min-width: min-content;
+}
+
 /* An underscore hidden inside a math widget must not start Markdown emphasis. */
 .cm-editor .cm-em.lsd-math-emphasis-spill,
 .cm-editor .cm-strong.lsd-math-emphasis-spill,
@@ -105,10 +125,11 @@
 
 .lsd-render-error { text-decoration: underline dotted var(--color-red); }
 
-.lsd-editing-preview {
+.cm-editor .lsd-editing-preview {
   border-left: 2px solid var(--text-accent);
   background: var(--background-secondary);
-  margin: 0.25em 0 0.5em;
+  /* CodeMirror block widgets must not have vertical margins. */
+  margin: 0;
   padding: 0.5em;
 }
 
@@ -121,6 +142,14 @@
 }
 .lsd-editing-preview mjx-container {
   min-width: min-content;
+}
+
+.lsd-math-focus {
+  background-color: var(--text-selection);
+  border-radius: 2px;
+}
+.lsd-preview-stale {
+  border-left-style: dashed !important;
 }
 
 .lsd-equation-diagnostic pre {

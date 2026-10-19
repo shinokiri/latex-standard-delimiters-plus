@@ -1,4 +1,4 @@
-# LaTeX Standard Delimiters
+# LaTeX Standard Delimiters Plus
 
 Inline: \(\frac{12}{x_1} + \alpha^2\).
 

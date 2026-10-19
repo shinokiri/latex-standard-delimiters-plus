@@ -5,3 +5,4 @@ main.js
 .env
 .env.*
 dist/
+.local-fixtures/

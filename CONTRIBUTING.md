@@ -1,7 +1,11 @@
 # Contributing
 
-Use Node 24, npm ci and npm run check. Keep Obsidian and CodeMirror imports external to the plugin bundle. Do not rewrite notes to implement rendering. Use a disposable vault for integration checks; developer scripts intentionally manipulate fixture editors and plugin settings. Never run them against a personal vault.
+Use Node 22.12+ (CI uses Node 24), `npm ci`, and `npm run check`. Packaging also needs Python 3. Keep Obsidian and CodeMirror imports external to the plugin bundle. Rendering must preserve note text.
 
-Report bugs through the issue template, with a minimal invented Markdown example and relevant versions. Compatibility claims should name the plugin versions and behaviors actually checked. Synthetic composition and narrow desktop panes do not establish real IME/mobile support.
+Use a disposable vault for app integration checks. For IME changes, verify that pending DOM edits survive, composing text nodes stay intact, delimiter characters remain visible, and repeated source/preview activation does not duplicate content. Synthetic events do not certify real OS keyboards.
 
-Follow RELEASING.md for beta releases. Release assets must all come from the same version. Published tags/assets must remain unchanged. Actual-app verification and device evidence are separate from GitHub CI.
+Optional private fixtures and extracted app bundles belong in ignored `.local-fixtures/`; do not commit them. Tests must pass without those files, reporting optional checks as skipped or omitted. The source archive must remain usable from a clean checkout.
+
+Report bugs with an invented minimal Markdown example, preserving delimiters, indentation and line breaks, and include plugin/Obsidian versions, mode, device, theme and input method. Use the issue template.
+
+See [RELEASING.md](RELEASING.md) for packaging and publication. Keep runtime files from the same version together. Preserve upstream attribution and avoid replacing published release assets.

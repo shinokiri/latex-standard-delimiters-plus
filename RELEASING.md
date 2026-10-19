@@ -1,7 +1,24 @@
-# Releases and updates
+# Releasing Plus
 
-Use Node 24 and npm ci. Run npm run check. Before a beta release, exercise the changed behavior in a disposable Obsidian vault, update VERIFICATION.md and compatibility evidence, and record outstanding platform checks honestly. GitHub CI runs static checks and unit tests; it cannot replace the actual-app suite.
+1. Update `manifest.json`, `package.json`, the root package entry in `package-lock.json`, `versions.json`, README and CHANGELOG. The tag must exactly match `manifest.version`, without a `v` prefix.
+2. Run `npm ci`, then `npm run package:release`. Packaging runs the complete checks. Review `dist/verification.json`; optional private fixtures and host bundles are not included in releases.
+3. Commit the final source, push `main`, and wait for GitHub Actions to pass. Do not change source after packaging; rebuild if needed.
+4. Create and push the version tag. Stage a draft GitHub release containing `main.js`, `manifest.json`, `styles.css`, `LICENSE`, `NOTICE.md`, the installation ZIP, source ZIP, `verification.json` and `SHA256SUMS.txt` from the same build. Describe behavior and verification limits in the release notes.
+5. Download the staged assets and verify all checksums and the tag's commit before publishing the draft. Preserve published tags/assets; use a new version for corrections.
 
-Update package.json, package-lock.json, manifest.json, versions.json, CHANGELOG.md and RELEASE-NOTES.md together. Commit to main, wait for Checks to pass, then push a numeric tag matching manifest.version exactly, such as 0.3.1 (no v prefix). The Release workflow repeats checks, validates the tag, builds from the lockfile and creates a draft marked as a pre-release with main.js, manifest.json, styles.css, checksums and a ZIP. Review the draft assets before publishing. Never move published tags or replace published release assets; fix problems in a new version. To retry a failed draft creation, inspect/delete only the incomplete draft and rerun its workflow.
+Example, after setting `release_version` to the manifest version and writing the reviewed notes to a local file:
 
-BRAT beta users can receive updates from published GitHub releases. Manual installations require replacing the three plugin files from the same release; preserve data.json. Distribution targets GitHub Releases and BRAT. Community Plugins submission and mobile certification are outside the current scope.
+```sh
+node scripts/check-versions.mjs "$release_version"
+git tag -a "$release_version" -m "Release $release_version"
+git push origin "$release_version"
+gh release create "$release_version" --repo shinokiri/latex-standard-delimiters-plus \
+  --verify-tag --draft --title "LaTeX Standard Delimiters Plus $release_version" \
+  --notes-file /path/to/release-notes.md \
+  main.js manifest.json styles.css LICENSE NOTICE.md \
+  "dist/latex-standard-delimiters-plus-$release_version.zip" \
+  "dist/latex-standard-delimiters-plus-$release_version-source.zip" \
+  dist/verification.json dist/SHA256SUMS.txt
+```
+
+This workflow publishes to GitHub, not Obsidian's community directory. Real-device verification is separate from CI. Keep local vault paths, private notes, app extracts and install backups out of the release.

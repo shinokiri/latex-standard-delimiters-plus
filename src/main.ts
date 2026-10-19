@@ -21,6 +21,7 @@ import {
   Decoration,
   type DecorationSet,
   EditorView,
+  type ViewUpdate,
   WidgetType,
   ViewPlugin,
   keymap
@@ -35,7 +36,11 @@ import { diagnoseEquation } from "./diagnostics";
 import { EquationDiagnosticModal } from "./diagnostics-modal";
 
 import { mathTokens, matchingBraces } from "./highlight";
-import { mathPresentation, containerReplacementRanges } from "./presentation";
+import { mathPresentation, containerReplacementRanges, type MathPresentation } from "./presentation";
+import { readingSectionOffset } from "./reading-mapping";
+import { registerMathActivation } from "./interaction";
+import { displayLayout } from "./display-layout";
+import { sourceHit, sourceToDocument, documentToSource, firstSourcePosition, highlightSource, invalidateSourceMap, type MathClick } from "./math-source-map";
 
 const readingParseCache = new Map<string, MathDelimiterMatch[]>();
 function readingMatches(text: string): MathDelimiterMatch[] {
@@ -101,6 +106,7 @@ const renderScopes = new WeakMap<Plugin, Set<ReadingRenderScope>>();
 const elementScopes = new WeakMap<HTMLElement, ReadingRenderScope>();
 class ReadingRenderScope extends MarkdownRenderChild {
   active = true;
+  mathActivations: Array<() => void> = [];
   replacements: Array<{ element: HTMLElement; original: DocumentFragment; key: string }> = [];
   constructor(element: HTMLElement, readonly context: MarkdownPostProcessorContext, readonly plugin: Plugin, readonly sourceRevision: string, public crossSection: boolean) { super(element); }
   onload(): void {
@@ -110,6 +116,7 @@ class ReadingRenderScope extends MarkdownRenderChild {
     scopes.add(this); elementScopes.set(this.containerEl, this);
   }
   restore(): void {
+    for (const dispose of this.mathActivations.splice(0)) dispose();
     for (const replacement of this.replacements) if (replacement.element.parentNode) replacement.element.replaceWith(replacement.original);
     this.replacements = [];
   }
@@ -328,10 +335,10 @@ async function renderReadingViewOnce(
       markedAt = end + marker.end.length;
     }
     cleanText += markedText.slice(markedAt);
-    const wholeSectionAt = rendered.text.indexOf(cleanText);
+    const wholeSectionAt = readingSectionOffset(rendered.text, cleanText);
     for (const mapping of mapped) {
       if (!mapping.visible) continue;
-      if (wholeSectionAt !== -1) {
+      if (wholeSectionAt !== null) {
         replacements.push({ from: wholeSectionAt + mapping.from, to: wholeSectionAt + mapping.to, match: mapping.match });
       } else {
         // A partial mapping must be unique on both sides: an already completed
@@ -369,22 +376,23 @@ async function renderReadingViewOnce(
     const presentation = mathPresentation(section.text, replacement.match);
     const math = renderFormula(presentation.source, replacement.match.display, replacement.match.display, element.ownerDocument);
     if (element.closest(".cm-callout .callout-content")) {
-      math.addEventListener("click", event => {
-        if (event.button !== 0) return;
+      const currentView = () => {
         const editor = element.closest<HTMLElement>(".cm-editor");
-        const view = editor ? EditorView.findFromDOM(editor) : null;
+        return editor ? EditorView.findFromDOM(editor) : null;
+      };
+      scope.mathActivations.push(registerMathActivation(math, () => currentView()?.composing ?? true, click => {
+        const view = currentView();
         const widget = element.closest<HTMLElement>(".cm-callout");
-        if (!view || !widget || view.composing) return;
-        const bounds = calloutSourceBounds(view, widget);
-        if (!bounds) return;
-        const candidates = parsedMatches(view.state).filter(candidate => candidate.from >= bounds.from && candidate.to <= bounds.to);
-        const sourceOrder = [...replacements].sort((left, right) => left.match.from - right.match.from);
-        const candidate = candidates[sourceOrder.indexOf(replacement)];
-        if (candidates.length !== sourceOrder.length || !candidate || mathPresentation(view.state.doc.toString(), candidate).source !== presentation.source) return;
-        event.preventDefault(); event.stopPropagation();
-        revealContainingCallout(view, candidate.from + 2);
-        view.dispatch({ selection: { anchor: candidate.from + 2 }, scrollIntoView: true }); view.focus();
-      });
+        if (!view || !widget || !scope.active) return;
+        activateMath(view, math, presentation.source, click, () => {
+          const bounds = calloutSourceBounds(view, widget);
+          if (!bounds || !scope.active) return;
+          const candidates = parsedMatches(view.state).filter(candidate => candidate.from >= bounds.from && candidate.to <= bounds.to);
+          const sourceOrder = [...replacements].sort((left, right) => left.match.from - right.match.from);
+          const candidate = candidates[sourceOrder.indexOf(replacement)];
+          return candidates.length === sourceOrder.length ? candidate : undefined;
+        }, true);
+      }));
     }
     if (acrossParents) {
       // Replace each text fragment separately so unload restores the original
@@ -502,12 +510,58 @@ const calloutCaretObserver = ViewPlugin.fromClass(class {
   destroy(): void { this.destroyed = true; pendingCalloutCarets.delete(this.view); }
 });
 
-function rangeTouchesSelection(state: EditorState, match: MathDelimiterMatch): boolean {
+function equationEditingRange(state: EditorState, match: MathDelimiterMatch, presentation = mathPresentation(state.doc.toString(), match)): { from: number; to: number } {
+  // A tap on indentation, a quote marker or trailing whitespace still edits
+  // this standalone display. Do not extend inline equations into nearby prose.
+  return presentation.standalone
+    ? { from: state.doc.lineAt(match.from).from, to: state.doc.lineAt(match.to).to }
+    : match;
+}
+
+function rangeTouchesSelection(state: EditorState, match: MathDelimiterMatch, presentation?: MathPresentation): boolean {
+  const bounds = equationEditingRange(state, match, presentation);
   return state.selection.ranges.some((range) => {
     if (range.empty) {
-      return range.from >= match.from && range.from <= match.to;
+      return range.from >= bounds.from && range.from <= bounds.to;
     }
-    return range.from < match.to && range.to > match.from;
+    return range.from < bounds.to && range.to > bounds.from;
+  });
+}
+
+const mathActivations = new WeakMap<HTMLElement, () => void>();
+const previewSources = new WeakMap<HTMLElement, {source: string; valid: boolean; identity: object}>();
+
+function activateMath(view: EditorView, element: HTMLElement, source: string, click: MathClick, resolve: () => MathDelimiterMatch | undefined, keepScreenPosition: boolean): void {
+  // Preserve the gesture target until all native input has been read. Resolve
+  // document offsets only afterwards: committing IME can move this formula.
+  const selectionAtClick = view.state.selection;
+  view.requestMeasure({key: element,
+    read: () => {
+      const hit = sourceHit(element, source, click);
+      const rect = click.target.getBoundingClientRect();
+      const scroller = view.scrollDOM.getBoundingClientRect();
+      const margin = Math.max(0, Math.min(rect.top - scroller.top, view.scrollDOM.clientHeight - view.defaultLineHeight * 2));
+      return {hit, margin: keepScreenPosition && rect.height > 0 && scroller.height > 0 ? margin : null};
+    },
+    write: result => queueMicrotask(() => {
+      if (!element.isConnected || view.composing) return;
+      // A user who has already moved the source caret owns its new position.
+      // Pending text input may legitimately change the selection during flush.
+      if (element.classList.contains("lsd-editing-preview") && !view.state.selection.eq(selectionAtClick)) return;
+      const match = resolve();
+      if (!match) return;
+      const presentation = mathPresentation(view.state.doc.toString(), match);
+      if (presentation.source !== source) return; // Never navigate from a stale preview.
+      const remembered = view.state.field(mathCaretMemory, false)?.find(item => item.from === match.from && item.to === match.to)?.head;
+      const current = view.state.selection.main;
+      const head = result.hit ? sourceToDocument(presentation, result.hit.caret) :
+        current.empty && current.head >= match.from + 2 && current.head <= match.to - 2 ? current.head : remembered;
+      const anchor = head ?? firstSourcePosition(presentation) ?? match.from + 2;
+      revealContainingCallout(view, anchor);
+      const effect = EditorView.scrollIntoView(anchor, result.margin === null ? {y: "nearest"} : {y: "start", yMargin: result.margin});
+      view.dispatch({selection: {anchor}, effects: effect});
+      view.focus();
+    })
   });
 }
 
@@ -516,7 +570,7 @@ class MathWidget extends WidgetType {
     private readonly source: string,
     private readonly display: boolean,
     private readonly block: boolean,
-    private readonly revealPosition: number
+    private readonly standalone = false
   ) {
     super();
   }
@@ -526,62 +580,83 @@ class MathWidget extends WidgetType {
       this.source === other.source &&
       this.display === other.display &&
       this.block === other.block &&
-      this.revealPosition === other.revealPosition
+      this.standalone === other.standalone
     );
   }
 
   toDOM(view: EditorView): HTMLElement {
     const element = renderFormula(this.source, this.display, this.block, view.dom.ownerDocument);
-    const reveal = () => {
-      // A composing editor owns its selection until the input method commits.
-      if (view.composing) return;
-      revealContainingCallout(view, this.revealPosition);
-      view.dispatch({ selection: { anchor: this.revealPosition }, scrollIntoView: true });
-      view.focus();
-    };
-    element.addEventListener("mousedown", event => {
-      if (event.button !== 0 || view.composing) return;
-      event.preventDefault();
-      event.stopPropagation();
-      reveal();
-    });
-    // Touch taps must reveal source, while swipes and long presses retain the
-    // browser's scrolling and selection behavior. Do not prevent pointerdown.
-    let touch: { id: number; x: number; y: number; time: number; moved: boolean } | null = null;
-    element.addEventListener("pointerdown", event => {
-      if (event.pointerType !== "touch" || !event.isPrimary) return;
-      touch = { id: event.pointerId, x: event.clientX, y: event.clientY, time: event.timeStamp, moved: false };
-    });
-    element.addEventListener("pointermove", event => {
-      if (touch?.id === event.pointerId && Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 8) touch.moved = true;
-    });
-    element.addEventListener("pointercancel", () => { touch = null; });
-    element.addEventListener("pointerup", event => {
-      const start = touch;
-      touch = null;
-      if (!start || start.moved || start.id !== event.pointerId || event.timeStamp - start.time > 500 ||
-        Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) return;
-      reveal();
-    });
-    queueMicrotask(() => { void finishRenderMath(); });
+    if (this.display && !this.block && this.standalone) element.classList.add("lsd-math-container-display");
+    const reveal = (click: MathClick) => activateMath(view, element, this.source, click, () => {
+        const position = view.posAtDOM(element);
+        return parsedMatches(view.state).find(candidate => candidate.from === position);
+      }, true);
+    mathActivations.set(element, registerMathActivation(element, () => view.composing, reveal));
+    queueMicrotask(() => { void finishRenderMath().then(() => { if (element.isConnected) view.requestMeasure(); }); });
     return element;
   }
 
-  ignoreEvent(event: Event): boolean {
-    return event.type === "mousedown" || event.type.startsWith("pointer");
+  destroy(element: HTMLElement): void {
+    mathActivations.get(element)?.();
+    mathActivations.delete(element);
   }
+  // Keep WidgetType's default ignoreEvent(true). MathJax text/selection/input
+  // events are not editable Markdown; our own click handler reveals the source.
 }
 
 class EditingPreviewWidget extends WidgetType {
-  constructor(private readonly source: string, private readonly display: boolean) { super(); }
-  eq(other: EditingPreviewWidget): boolean { return this.source === other.source && this.display === other.display; }
+  constructor(private readonly source: string, private readonly display: boolean, private readonly identity: object) { super(); }
+  eq(other: EditingPreviewWidget): boolean { return this.source === other.source && this.display === other.display && this.identity === other.identity; }
   toDOM(view: EditorView): HTMLElement {
     const element = renderFormula(this.source, this.display, true, view.dom.ownerDocument);
     element.classList.add("lsd-editing-preview");
     element.setAttribute("aria-label", "Equation preview");
-    queueMicrotask(() => { void finishRenderMath(); });
+    previewSources.set(element, {source: this.source, valid: !hasMathError(element), identity: this.identity});
+    mathActivations.set(element, registerMathActivation(element, () => view.composing, click => {
+      const rendered = previewSources.get(element);
+      if (!rendered?.valid || element.classList.contains("lsd-preview-stale")) return;
+      activateMath(view, element, rendered.source, click, () => {
+        const selected = view.state.selection.main;
+        return parsedMatches(view.state).find(match => {
+          const bounds = equationEditingRange(view.state, match);
+          return selected.from >= bounds.from && selected.to <= bounds.to && view.state.doc.lineAt(match.to).to === view.posAtDOM(element);
+        });
+      }, false);
+    }));
+    queueMicrotask(() => { void finishRenderMath().then(() => { if (element.isConnected) view.requestMeasure(); }); });
     return element;
   }
+
+  updateDOM(element: HTMLElement, view: EditorView): boolean {
+    const replacement = renderFormula(this.source, this.display, true, view.dom.ownerDocument);
+    const valid = !hasMathError(replacement);
+    const previous = previewSources.get(element);
+    const stale = !valid && !!previous?.valid && previous.identity === this.identity;
+    element.classList.toggle("lsd-preview-stale", stale);
+    if (stale) {
+      element.setAttribute("aria-label", "Equation preview: last valid result; current source is incomplete");
+      element.title = "Last valid preview; current formula is incomplete";
+    }
+    else {
+      element.setAttribute("aria-label", "Equation preview");
+      element.removeAttribute("title");
+      element.classList.toggle("lsd-render-error", !valid);
+      element.replaceChildren(...Array.from(replacement.childNodes));
+      previewSources.set(element, {source: this.source, valid, identity: this.identity});
+      invalidateSourceMap(element);
+    }
+    queueMicrotask(() => { void finishRenderMath().then(() => { if (element.isConnected) view.requestMeasure(); }); });
+    return true;
+  }
+
+  destroy(element: HTMLElement): void {
+    mathActivations.get(element)?.(); mathActivations.delete(element);
+    previewSources.delete(element);
+  }
+}
+
+function hasMathError(element: HTMLElement): boolean {
+  return element.classList.contains("lsd-render-error") || !!element.querySelector("mjx-merror, [data-mjx-error], .mjx-merror");
 }
 
 class LiteralMarkerWidget extends WidgetType {
@@ -682,25 +757,85 @@ function parsedMatches(state: EditorState): MathDelimiterMatch[] {
   return matches;
 }
 
+// Per-editor bookmarks follow document changes and are discarded if their
+// equation disappears. Identical formulas remain distinct; nothing is saved
+// into notes or plugin settings. Bound memory to the most recent 64 equations.
+const mathCaretMemory = StateField.define<Array<{from: number; to: number; head: number}>>({
+  create(state) {
+    const selection = state.selection.main;
+    const match = state.selection.ranges.length === 1 && selection.empty ? parsedMatches(state).find(candidate => selection.head >= candidate.from + 2 && selection.head <= candidate.to - 2) : undefined;
+    return match ? [{from: match.from, to: match.to, head: selection.head}] : [];
+  },
+  update(previous, transaction) {
+    const matches = parsedMatches(transaction.state);
+    let entries = transaction.docChanged ? previous.map(item => ({
+      from: transaction.changes.mapPos(item.from, 1), to: transaction.changes.mapPos(item.to, -1), head: transaction.changes.mapPos(item.head, 1)
+    })).filter(item => matches.some(match => match.from === item.from && match.to === item.to) && item.head >= item.from + 2 && item.head <= item.to - 2) : previous;
+    const selection = transaction.state.selection.main;
+    if (transaction.state.selection.ranges.length === 1 && selection.empty) {
+      const match = matches.find(candidate => selection.head >= candidate.from + 2 && selection.head <= candidate.to - 2);
+      if (match) entries = [...entries.filter(item => item.from !== match.from), {from: match.from, to: match.to, head: selection.head}].slice(-64);
+    }
+    return entries;
+  }
+});
+
+const mathPreviewFocus = ViewPlugin.fromClass(class {
+  private destroyed = false;
+  constructor(private view: EditorView) { this.schedule(); }
+  update(update: ViewUpdate): void { if (update.docChanged || update.selectionSet || update.transactions.some(transaction => transaction.effects.length)) this.schedule(); }
+  private schedule(): void {
+    this.view.requestMeasure({key: this, read: () => null, write: () => {
+      if (this.destroyed) return;
+      const state = this.view.state, selection = state.selection.main;
+      const match = parsedMatches(state).find(candidate => selection.empty && selection.head >= candidate.from + 2 && selection.head <= candidate.to - 2);
+      const presentation = match ? mathPresentation(state.doc.toString(), match) : null;
+      for (const element of Array.from(this.view.dom.querySelectorAll<HTMLElement>(".lsd-editing-preview"))) {
+        const rendered = previewSources.get(element);
+        const current = rendered?.valid && presentation?.source === rendered.source && !state.field(compositionState, false);
+        highlightSource(element, rendered?.source ?? "", current && presentation ? documentToSource(presentation, selection.head) : null);
+      }
+    }});
+  }
+  destroy(): void { this.destroyed = true; }
+});
+
 const setComposing = StateEffect.define<boolean>();
 const compositionState = StateField.define<boolean>({
   create: () => false,
   update(value, transaction) {
+    // The first DOM input can arrive before the deferred start notification.
+    if (transaction.isUserEvent("input.type.compose")) value = true;
     for (const effect of transaction.effects) if (effect.is(setComposing)) value = effect.value;
     return value;
   }
 });
-const compositionEvents = EditorView.domEventHandlers({
-  compositionstart(_event, view) {
-    view.dispatch({ effects: setComposing.of(true) });
-    return false;
-  },
-  compositionend(_event, view) {
-    // Let CodeMirror commit the composed text before rebuilding widgets.
-    queueMicrotask(() => {
-      if (view.dom.isConnected && view.state.field(compositionState, false)) view.dispatch({ effects: setComposing.of(false) });
+const compositionEvents = ViewPlugin.fromClass(class {
+  private destroyed = false;
+  constructor(private readonly view: EditorView) {}
+  update(update: ViewUpdate): void {
+    if (update.transactions.some(transaction => transaction.isUserEvent("input.type.compose"))) this.schedule();
+  }
+  schedule(): void {
+    // A synchronous dispatch clears CodeMirror's unread DOM mutations. A
+    // microtask queued by compositionend can also run before the final input's
+    // delayed observer flush on Android. CodeMirror flushes pending input at
+    // the start of its measurement cycle. Use that public scheduling API, then
+    // dispatch after the cycle (updates are forbidden inside read/write).
+    this.view.requestMeasure({
+      key: this, read: () => null,
+      write: () => queueMicrotask(() => {
+        if (this.destroyed || !this.view.dom.isConnected) return;
+        const composing = this.view.hasFocus && this.view.compositionStarted;
+        if (composing !== this.view.state.field(compositionState)) this.view.dispatch({ effects: setComposing.of(composing) });
+      })
     });
-    return false;
+  }
+  destroy(): void { this.destroyed = true; }
+}, {
+  eventObservers: {
+    compositionstart() { this.schedule(); }, compositionend() { this.schedule(); },
+    focus() { this.schedule(); }, blur() { this.schedule(); }
   }
 });
 
@@ -738,6 +873,61 @@ const vimSourceObserver = ViewPlugin.fromClass(class {
   destroy(): void { this.destroyed = true; this.observer.disconnect(); }
 });
 
+type EditingPreview = { from: number; to: number; equationFrom: number; equationTo: number; identity: object; at: number; source: string; display: boolean; standalone: boolean };
+
+function canShowEditingPreview(state: EditorState): boolean {
+  const options = state.facet(renderOptions);
+  return options.enabled && options.previews && !!state.field(editorLivePreviewField, false) &&
+    !state.field(vimSourceState, false) && state.selection.ranges.length === 1;
+}
+
+function selectionInsideEquation(state: EditorState, bounds: { from: number; to: number }, standalone: boolean): boolean {
+  const selection = state.selection.main;
+  // Triple-click/select-line includes the trailing newline. It is still a
+  // selection of this equation, as long as it contains no neighbouring prose.
+  const end = bounds.to + (!selection.empty && standalone && state.doc.sliceString(bounds.to, bounds.to + 1) === "\n" ? 1 : 0);
+  return selection.from >= bounds.from && selection.from <= bounds.to && selection.to <= end;
+}
+
+function selectedEditingPreview(state: EditorState): EditingPreview | null {
+  if (!canShowEditingPreview(state)) return null;
+  const text = state.doc.toString();
+  for (const match of parsedMatches(state)) {
+    const presentation = mathPresentation(text, match);
+    const bounds = equationEditingRange(state, match, presentation);
+    if (selectionInsideEquation(state, bounds, presentation.standalone)) {
+      return { ...bounds, equationFrom: match.from, equationTo: match.to, identity: {}, at: state.doc.lineAt(match.to).to, source: presentation.source, display: match.display, standalone: presentation.standalone };
+    }
+  }
+  return null;
+}
+
+const editingPreviewState = StateField.define<EditingPreview | null>({
+  create: selectedEditingPreview,
+  update(previous, transaction) {
+    const state = transaction.state;
+    if (!canShowEditingPreview(state)) return null;
+    if (state.field(compositionState, false) && previous) {
+      const from = transaction.changes.mapPos(previous.from, -1);
+      const to = transaction.changes.mapPos(previous.to, 1);
+      // Android can start a composition merely from tapping a word. Keep the
+      // existing preview stable only while editing that same equation. If a
+      // tap enters an equation after composition already started, initialize
+      // its first preview instead of freezing the previous absence of one.
+      if (selectionInsideEquation(state, { from, to }, previous.standalone)) {
+        return { ...previous, from, to,
+          equationFrom: transaction.changes.mapPos(previous.equationFrom, 1), equationTo: transaction.changes.mapPos(previous.equationTo, -1),
+          at: state.doc.lineAt(transaction.changes.mapPos(previous.at, 1)).to };
+      }
+    }
+    const selected = selectedEditingPreview(state);
+    // Stable identity follows this equation through edits, not its numeric
+    // position or TeX text. Switching equations must never reuse a stale result.
+    if (previous && selected && selected.equationFrom === transaction.changes.mapPos(previous.equationFrom, 1) && selected.equationTo === transaction.changes.mapPos(previous.equationTo, -1)) selected.identity = previous.identity;
+    return selected;
+  }
+});
+
 function buildLivePreviewDecorations(state: EditorState): DecorationSet {
   const options = state.facet(renderOptions);
   if (!options.enabled || !state.field(editorLivePreviewField, false)) return Decoration.none;
@@ -745,7 +935,6 @@ function buildLivePreviewDecorations(state: EditorState): DecorationSet {
   const documentText = state.doc.toString();
   const composing = state.field(compositionState, false) === true;
   const vimSource = state.field(vimSourceState, false) === true;
-  let previewAdded = false;
   const ranges: ReturnType<Decoration["range"]>[] = [];
 
   for (const spill of emphasisSpills(state, matches)) {
@@ -753,7 +942,7 @@ function buildLivePreviewDecorations(state: EditorState): DecorationSet {
   }
   for (const match of matches) {
     const presentation = mathPresentation(documentText, match);
-    if (vimSource || rangeTouchesSelection(state, match)) {
+    if (vimSource || rangeTouchesSelection(state, match, presentation)) {
       for (const token of mathTokens(presentation.source)) {
         for (const segment of presentation.segments) {
           const from = Math.max(token.from, segment.sourceFrom);
@@ -791,22 +980,17 @@ function buildLivePreviewDecorations(state: EditorState): DecorationSet {
           ranges.push(Decoration.line({class: "lsd-math-source-line"}).range(line.from));
         }
       }
-      for (const marker of composing ? [] : markdownFormattingMarkersInMath(state, match)) {
+      // Keep literal source markers stable across the composition lifecycle.
+      // Removing them exposes Obsidian's (possibly frozen) empty replacements
+      // for Markdown escapes, so even an idle IME can hide the '\\' in '\\['.
+      // CodeMirror preserves the text node owned by the IME and applies these
+      // decorations outside it; do not remove all markers or patch contentDOM.
+      for (const marker of markdownFormattingMarkersInMath(state, match)) {
         ranges.push(
           Decoration.replace({
             widget: new LiteralMarkerWidget(marker.text)
           }).range(marker.from, marker.to)
         );
-      }
-      // A block widget after the final source line avoids changing the line's
-      // text or placing uneditable rendered content between source characters.
-      if (!vimSource && !composing && options.previews && !previewAdded && state.selection.ranges.length === 1 && state.selection.main.empty) {
-        previewAdded = true;
-        ranges.push(Decoration.widget({
-        widget: new EditingPreviewWidget(presentation.source, match.display),
-        block: true,
-        side: 1
-      }).range(state.doc.lineAt(match.to).to));
       }
       continue;
     }
@@ -822,7 +1006,7 @@ function buildLivePreviewDecorations(state: EditorState): DecorationSet {
       for (let i = 0; i < contentRanges.length; i++) {
         const range = contentRanges[i];
         ranges.push(Decoration.replace({
-          widget: i === 0 ? new MathWidget(presentation.source, true, false, match.from + 2) : undefined
+          widget: i === 0 ? new MathWidget(presentation.source, true, false, presentation.standalone) : undefined
         }).range(range.from, range.to));
       }
       // Prefix-preserving replacements retain the host's list/callout grammar,
@@ -841,15 +1025,22 @@ function buildLivePreviewDecorations(state: EditorState): DecorationSet {
     ranges.push(
       Decoration.replace({
         widget: new MathWidget(
-          match.source,
+          presentation.source,
           match.display,
           isWholeLineBlock,
-          match.from + 2
+          presentation.standalone
         ),
         block: isWholeLineBlock
       }).range(match.from, match.to)
     );
   }
+  const storedPreview = state.field(editingPreviewState, false);
+  const preview = storedPreview === undefined ? (composing ? null : selectedEditingPreview(state)) : storedPreview;
+  // A separate block after the source avoids placing uneditable rendered DOM
+  // between source characters, including while selecting or composing text.
+  if (preview) ranges.push(Decoration.widget({
+    widget: new EditingPreviewWidget(preview.source, preview.display, preview.identity), block: true, side: 1
+  }).range(preview.at));
   return Decoration.set(ranges, true);
 }
 
@@ -865,7 +1056,7 @@ const livePreviewExtension = StateField.define<DecorationSet>({
     }
     return decorations;
   },
-  provide: (field) => Prec.highest(EditorView.decorations.from(field))
+  provide: (field) => [Prec.highest(EditorView.decorations.from(field)), mathCaretMemory, mathPreviewFocus]
 });
 
 function enterMathVertically(view: EditorView, forward: boolean): boolean {
@@ -918,7 +1109,7 @@ export default class LatexDelimiterRenderer extends Plugin {
     dispose: () => void; schedule: () => void;
   }>();
   private diagnosticModals = new Set<EquationDiagnosticModal>();
-  private extensions = [livePreviewExtension, EditorView.theme({}), mathNavigation, renderOptions.of({ previews: true, enabled: true }), compositionState, compositionEvents, vimSourceState, vimSourceObserver, calloutCaretObserver, embeddedWidgetObserver, refreshEmbedded.of(() => this.refreshEmbeddedMath())];
+  private extensions = [livePreviewExtension, EditorView.theme({}), mathNavigation, renderOptions.of({ previews: true, enabled: true }), compositionState, compositionEvents, vimSourceState, vimSourceObserver, calloutCaretObserver, embeddedWidgetObserver, refreshEmbedded.of(() => this.refreshEmbeddedMath()), editingPreviewState, displayLayout];
 
   async saveColors(): Promise<void> {
     await this.saveData({ colors: this.colors, editingPreviews: this.editingPreviews, renderingMode: this.renderingMode });
@@ -1162,7 +1353,7 @@ export default class LatexDelimiterRenderer extends Plugin {
       const value: unknown = await this.app.vault.adapter.exists(configPath)
         ? JSON.parse(await this.app.vault.adapter.read(configPath)) : [];
       if (!Array.isArray(value) || this.disposed) return;
-      this.knownRendererConflict = value.includes("latex-delimiter-renderer");
+      this.knownRendererConflict = value.includes("latex-delimiter-renderer") || value.includes("latex-standard-delimiters");
       const enabled = this.renderingMode === "automatic" && !this.knownRendererConflict;
       if (enabled === this.rendererEnabled) return;
       this.rendererEnabled = enabled;
@@ -1185,7 +1376,7 @@ export default class LatexDelimiterRenderer extends Plugin {
 
   get renderingStatus(): string {
     if (this.renderingMode === "off") return "Rendering is off by your choice. Other plugins can handle equations.";
-    if (this.knownRendererConflict) return "Paused: LaTeX Delimiter Renderer is enabled. Disable it to let this plugin handle standard delimiters.";
+    if (this.knownRendererConflict) return "Paused: another standard delimiter renderer is enabled. Disable LaTeX Delimiter Renderer and LaTeX Standard Delimiters to let Plus handle equations.";
     return "Active: this plugin handles standard delimiters. MathJax extensions continue to use the shared engine.";
   }
 
@@ -1248,7 +1439,7 @@ class MathColorsTab extends PluginSettingTab {
       },
       {
         name: "Preview equations while editing",
-        desc: "Show a rendered preview beneath the active equation. Selections and multiple cursors do not show previews.",
+        desc: "Keep a preview beneath the equation while editing or selecting its source. During input-method composition, keep the last preview until the text is committed. Multiple cursors and selections spanning surrounding text do not show previews.",
         aliases: ["LaTeX", "live preview"],
         control: { type: "toggle", key: "editingPreviews" }
       },

@@ -1,0 +1,31 @@
+{
+  "id": "latex-standard-delimiters-plus",
+  "version": "0.4.13",
+  "builtAt": "2026-10-19T11:29:53.571369+00:00",
+  "upstream": "DicksonKam/latex-standard-delimiters@758615a (0.4.7)",
+  "checks": {
+    "npmRunCheck": "passed",
+    "tests": {
+      "tests": 110,
+      "pass": 110,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "productionImports": [
+    "@codemirror/language",
+    "@codemirror/state",
+    "@codemirror/view",
+    "obsidian"
+  ],
+  "realDeviceTested": false,
+  "testEnvironment": "Node + markdown-it + jsdom, real CodeMirror state/view, synthetic events and DOM mutations; geometry supplied to sizing tests; Obsidian APIs mocked; editor tests use mocked or captured MathJax CHTML, plus an optional actual local MathJax compatibility test",
+  "localCompatibilityScope": "Fourteen DOM-input/touch/source-navigation tests additionally use an isolated core extracted from the locally installed Obsidian 1.14.4 APK, including a minimal Markdown escape-hiding fixture; this is not an Android UI or keyboard test",
+  "localMathJaxScope": "Optional tests run 20 original expressions through the installed MathJax 4.1.3, verify annotations and actual error output, and check source navigation in the private 33-formula note when available; no layout or UI testing",
+  "runtimeAssets": {
+    "main.js": "aeebfcccc6625846f23c461052823b12f920961de25c9dd723ae41cd32bb9ecb",
+    "manifest.json": "217dfeb23680cfceee938b0c23df48de5d99d869f6bd80418310625ab3a0a3a3",
+    "styles.css": "a018adf9b4d7247093121665db87d4e5805af3595194381926ff39a490ad1059"
+  },
+  "scope": "Development checks with optional local fixtures. Those notes and extracted host bundles are not distributed. See release verification.json for clean-checkout results."
+}
