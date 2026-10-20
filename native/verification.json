@@ -1,0 +1,81 @@
+{
+  "evaluatedAt": "2026-10-20T16:01:11.753961+00:00",
+  "status": "research prototype; no APK installation or vault changes",
+  "stableBase": {
+    "version": "0.4.13",
+    "commit": "b4c6aa07340e96b2d813e3ad761c6251bb28e0a9"
+  },
+  "host": {
+    "version": "1.14.4",
+    "platform": "Android",
+    "mathjaxVersion": "4.1.3"
+  },
+  "nativeTests": {
+    "tests": 14,
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "pairedMarkdownCases": 32,
+    "typecheck": "passed"
+  },
+  "repositoryChecks": {
+    "versionConsistency": "passed",
+    "lintErrors": 0,
+    "preexistingLintWarnings": 4,
+    "tests": 110,
+    "passed": 107,
+    "failed": 0,
+    "skipped": 3,
+    "typecheck": "passed",
+    "build": "passed"
+  },
+  "patchArtifacts": [
+    {
+      "kind": "app",
+      "hostVersion": "1.14.4",
+      "hostPlatform": "Android",
+      "centralParserHooks": 1,
+      "editorModeHooks": 1,
+      "originalBytes": 3968611,
+      "patchedBytes": 3972627,
+      "originalSha256": "7591ddf1df0414b26af79b9ae7fcaffc0f210332686520523fc3a391d675800e",
+      "patchedSha256": "13cf3b30fa638111b620dc601333f1f241a2022a864a7d955ca3140501d5bcd1"
+    },
+    {
+      "kind": "worker",
+      "hostVersion": "1.14.4",
+      "hostPlatform": "Android",
+      "centralParserHooks": 1,
+      "editorModeHooks": 0,
+      "originalBytes": 239777,
+      "patchedBytes": 243768,
+      "originalSha256": "a42f7927658132927e124131fdb7fc69fdb2853097c24158e0fdb245b87c34ae",
+      "patchedSha256": "c6685b83e8d7e9c4754181fff615fa3340b4186bf8b314cf364053397f486675"
+    }
+  ],
+  "verified": [
+    "Actual installed native editor token styles for paired standard/dollar examples",
+    "Actual native worker reading sections and original source positions from raw standard-delimiter input",
+    "Native heading anchors and metadata retain the original delimiter spelling",
+    "Metadata ignores Markdown syntax inside recognized math",
+    "Incremental edits and all selection positions in an edited synthetic example",
+    "Compiled adapter with the native restricted table-cell grammar",
+    "Long-formula token and line styles",
+    "Reading-wrapper lifecycle, async snapshots and layered unload behavior",
+    "Known-host checksums, hook counts, generated JavaScript syntax and repeat-patch refusal"
+  ],
+  "notVerified": [
+    "Complete application startup with the patched app bundle",
+    "Physical Android keyboard, IME, touch interaction or rendered DOM geometry",
+    "End-to-end table and embed UI editing, undo and mode switching in a modified app",
+    "Desktop or iOS compatibility",
+    "Universal parity for every malformed or ambiguous math input"
+  ],
+  "pluginPrototypeGaps": [
+    "Direct internal table, embed and metadata parsing bypasses API-level reading wrappers",
+    "Source-derived heading labels need independent handling in the projection route"
+  ],
+  "performance": "performance.json; small samples, parser-only timings, not UI latency",
+  "originalPluginAudit": "plus-audit.json; synthetic data only, no stable plugin changes",
+  "distribution": "Own evaluation sources, synthetic tests and sanitized reports only; no app bundles, generated host derivatives or private notes"
+}

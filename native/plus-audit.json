@@ -1,0 +1,181 @@
+{
+  "node": "v26.4.0",
+  "platform": "android",
+  "arch": "arm64",
+  "time": "2026-10-20T14:48:31.291Z",
+  "scope": "Plugin-only CodeMirror transactions on Android; synthetic corpora only. Excludes host parser, layout, MathJax and IME. Not comparable to full native parser timings.",
+  "rows": [
+    {
+      "name": "plain-100",
+      "characters": 1600,
+      "formulas": 100,
+      "parser": {
+        "p50_ms": 0.202,
+        "p95_ms": 1.126,
+        "max_ms": 1.126,
+        "samples": 12
+      },
+      "allPresentations": {
+        "p50_ms": 0.088,
+        "p95_ms": 0.173,
+        "max_ms": 0.173,
+        "samples": 12
+      },
+      "initialState": {
+        "p50_ms": 2.612,
+        "p95_ms": 2.721,
+        "max_ms": 2.721,
+        "samples": 10
+      },
+      "selection": {
+        "p50_ms": 0.627,
+        "p95_ms": 0.747,
+        "max_ms": 0.747,
+        "samples": 12
+      },
+      "typing": {
+        "p50_ms": 2.412,
+        "p95_ms": 3.237,
+        "max_ms": 3.237,
+        "samples": 12
+      },
+      "vanillaSelection": {
+        "p50_ms": 0.005,
+        "p95_ms": 0.091,
+        "max_ms": 0.091,
+        "samples": 12
+      }
+    },
+    {
+      "name": "plain-500",
+      "characters": 8400,
+      "formulas": 500,
+      "parser": {
+        "p50_ms": 0.624,
+        "p95_ms": 2.157,
+        "max_ms": 2.157,
+        "samples": 12
+      },
+      "allPresentations": {
+        "p50_ms": 0.25,
+        "p95_ms": 0.281,
+        "max_ms": 0.281,
+        "samples": 12
+      },
+      "initialState": {
+        "p50_ms": 12.376,
+        "p95_ms": 13.63,
+        "max_ms": 13.63,
+        "samples": 10
+      },
+      "selection": {
+        "p50_ms": 3.261,
+        "p95_ms": 4.294,
+        "max_ms": 4.294,
+        "samples": 12
+      },
+      "typing": {
+        "p50_ms": 12.34,
+        "p95_ms": 13.861,
+        "max_ms": 13.861,
+        "samples": 12
+      },
+      "vanillaSelection": {
+        "p50_ms": 0.006,
+        "p95_ms": 0.018,
+        "max_ms": 0.018,
+        "samples": 12
+      }
+    },
+    {
+      "name": "list-100",
+      "characters": 3692,
+      "formulas": 100,
+      "parser": {
+        "p50_ms": 0.314,
+        "p95_ms": 0.354,
+        "max_ms": 0.354,
+        "samples": 12
+      },
+      "allPresentations": {
+        "p50_ms": 4.194,
+        "p95_ms": 4.806,
+        "max_ms": 4.806,
+        "samples": 12
+      },
+      "initialState": {
+        "p50_ms": 13.983,
+        "p95_ms": 14.689,
+        "max_ms": 14.689,
+        "samples": 10
+      },
+      "selection": {
+        "p50_ms": 9.736,
+        "p95_ms": 10.477,
+        "max_ms": 10.477,
+        "samples": 12
+      },
+      "typing": {
+        "p50_ms": 13.871,
+        "p95_ms": 14.617,
+        "max_ms": 14.617,
+        "samples": 12
+      },
+      "vanillaSelection": {
+        "p50_ms": 0.005,
+        "p95_ms": 0.006,
+        "max_ms": 0.006,
+        "samples": 12
+      }
+    },
+    {
+      "name": "list-500",
+      "characters": 19292,
+      "formulas": 500,
+      "parser": {
+        "p50_ms": 1.625,
+        "p95_ms": 3.139,
+        "max_ms": 3.139,
+        "samples": 12
+      },
+      "allPresentations": {
+        "p50_ms": 101.08,
+        "p95_ms": 102.074,
+        "max_ms": 102.074,
+        "samples": 7
+      },
+      "initialState": {
+        "p50_ms": 233.95,
+        "p95_ms": 235.075,
+        "max_ms": 235.075,
+        "samples": 4
+      },
+      "selection": {
+        "p50_ms": 196.77,
+        "p95_ms": 199.664,
+        "max_ms": 199.664,
+        "samples": 4
+      },
+      "typing": {
+        "p50_ms": 205.12,
+        "p95_ms": 207.339,
+        "max_ms": 207.339,
+        "samples": 4
+      },
+      "vanillaSelection": {
+        "p50_ms": 0.005,
+        "p95_ms": 0.088,
+        "max_ms": 0.088,
+        "samples": 12
+      }
+    }
+  ],
+  "sourceCommit": "b4c6aa07340e96b2d813e3ad761c6251bb28e0a9",
+  "findings": [
+    "The stable Plus parser deliberately leaves dollar-delimited math to Obsidian.",
+    "The conservative Plus source mapper can reject boxed expressions because MathJax expands the wrapper before annotation.",
+    "Some Chinese text runs are single MathJax text leaves, preventing per-character hit mapping in the current mapper.",
+    "Repeated prefix slicing and newline splitting in list-presentation detection cause quadratic work across many indented formulas.",
+    "Selection changes rebuild Plus decorations; this is not equivalent to rerendering every MathJax widget."
+  ]
+}

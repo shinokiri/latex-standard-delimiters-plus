@@ -1,0 +1,66 @@
+{
+  "scope": "Full syntax parse and native worker section parsing only. No DOM layout, MathJax rendering, physical input or UI latency.",
+  "platform": "android/arm64",
+  "node": "v26.4.0",
+  "results": [
+    {
+      "kind": "inline",
+      "count": 100,
+      "standardChars": 2589,
+      "nativeEditorDollar": {
+        "medianMs": 5.388,
+        "samples": 5
+      },
+      "adaptedEditorDollar": {
+        "medianMs": 5.225,
+        "samples": 5
+      },
+      "adaptedEditorStandard": {
+        "medianMs": 7.282,
+        "samples": 5
+      },
+      "nativeReadingDollar": {
+        "medianMs": 34.916,
+        "samples": 5
+      },
+      "patchedReadingDollar": {
+        "medianMs": 33.747,
+        "samples": 5
+      },
+      "patchedReadingStandard": {
+        "medianMs": 33.911,
+        "samples": 5
+      }
+    },
+    {
+      "kind": "list",
+      "count": 100,
+      "standardChars": 3481,
+      "nativeEditorDollar": {
+        "medianMs": 3.987,
+        "samples": 5
+      },
+      "adaptedEditorDollar": {
+        "medianMs": 3.213,
+        "samples": 5
+      },
+      "adaptedEditorStandard": {
+        "medianMs": 7.573,
+        "samples": 5
+      },
+      "nativeReadingDollar": {
+        "medianMs": 51.746,
+        "samples": 5
+      },
+      "patchedReadingDollar": {
+        "medianMs": 51.259,
+        "samples": 5
+      },
+      "patchedReadingStandard": {
+        "medianMs": 51.4,
+        "samples": 5
+      }
+    }
+  ],
+  "adapterExecution": "Bundled adapter and installed editor grammar execute in the same JSDOM realm."
+}

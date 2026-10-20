@@ -9,6 +9,8 @@ export default defineConfig(
     ".local-fixtures/**",
     "scripts",
     "tests",
+    "native/tests/**",
+    "native/patch-core.mjs",
     "esbuild.config.mjs",
     "versions.json",
     "main.js",

@@ -1,0 +1,9 @@
+{
+  "id": "native-latex-delimiters",
+  "name": "Native LaTeX Delimiters",
+  "version": "0.1.0",
+  "minAppVersion": "1.14.4",
+  "description": "Recognize LaTeX parentheses and brackets using Obsidian's native math editing and rendering.",
+  "author": "shinokiri",
+  "isDesktopOnly": false
+}
