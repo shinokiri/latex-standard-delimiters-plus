@@ -5,12 +5,14 @@ const {
 } = require("./trial-core.cjs");
 const { preview, editorStandard, editorDollar, embedSource, runChecks } = require("./trial-checks.cjs");
 const { foregroundOperation } = require("./trial-async.cjs");
+const { inspectInstalledPackage } = require("./daily-package.cjs");
 const PLAN = __TRIAL_PLAN__;
 const PLUS = "latex-standard-delimiters-plus";
-const ACTIONS = new Set(["prepare", "start", "verify", "inspect", "prepare-restart", "restore", "cleanup", "reload-self"]);
+const ACTIONS = new Set(["prepare", "start", "verify", "inspect", "inspect-package", "prepare-restart", "restore", "cleanup", "reload-self"]);
 const NATIVE = new Set([
   "App.getInfo", "WebView.getServerBasePath", "WebView.setServerBasePath", "WebView.setServerAssetPath",
   "Filesystem.getUri", "Filesystem.writeFile", "Filesystem.readFile", "Filesystem.rmdir",
+  "Filesystem.stat",
 ]);
 const pause = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
@@ -211,6 +213,9 @@ class NativeDelimiterTrial extends Plugin {
           await manager.disablePlugin(id);
           await manager.enablePlugin(id);
         }, 100);
+      } else if (action === "inspect-package") {
+        const result = await inspectInstalledPackage(this);
+        await this.app.vault.adapter.write(this.manifest.dir + "/package-report.json", JSON.stringify(result, null, 2));
       } else if (action === "prepare-restart") {
         this.showProgress("笔记正在保存。保存完成后将完整重启，以验证回退。");
         await this.saveOpenViews();

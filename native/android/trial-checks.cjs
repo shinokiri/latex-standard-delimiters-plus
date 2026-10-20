@@ -3,6 +3,7 @@ const { ensureSyntaxTree } = require("@codemirror/language");
 const { undo } = require("@codemirror/commands");
 const { cases } = require("../tests/cases.ts");
 const { digest, removeInsertions } = require("./trial-core.cjs");
+const { foregroundOperation } = require("./trial-async.cjs");
 
 const editorStandard = String.raw`编辑检查（测试笔记）
 
@@ -58,28 +59,29 @@ $$
 这些示例应保持原样：` + "`\\(x\\)`、`\\[x\\]`。\n\n" +
   "## 手动体验\n\n在实时预览中点击公式，测试源码着色、光标、输入法、撤销；再切换阅读模式比较。试运行没有开启跨进程自动加载，完整重启将恢复官方资源。\n";
 
-function workerClient(url) {
+function workerClient(url, signal) {
   const worker = new Worker(url);
   return {
     async request(data) {
-      return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error("worker-timeout")), 8000);
-        worker.onmessage = event => { clearTimeout(timer); resolve(event.data); };
-        worker.onerror = () => { clearTimeout(timer); reject(new Error("worker-error")); };
+      return foregroundOperation(() => new Promise((resolve, reject) => {
+        worker.onmessage = event => resolve(event.data);
+        worker.onerror = () => reject(new Error("worker-error"));
         worker.postMessage(data);
-      });
+      }), { document, signal, timeoutMs: 8000, timeoutMessage: "worker-timeout" });
     },
     close() { worker.terminate(); },
   };
 }
 
-async function waitFor(check, milliseconds = 10000) {
-  const end = performance.now() + milliseconds;
-  while (performance.now() < end) {
-    if (check()) return;
-    await new Promise(resolve => setTimeout(resolve, 50));
-  }
-  throw new Error("render-timeout");
+async function waitFor(check, milliseconds = 10000, signal) {
+  let timer;
+  try {
+    await foregroundOperation(() => new Promise((resolve, reject) => {
+      const poll = () => { try { if (check()) resolve(); } catch (error) { reject(error); } };
+      timer = setInterval(poll, 50);
+      poll();
+    }), { document, signal, timeoutMs: milliseconds, timeoutMessage: "render-timeout" });
+  } finally { clearInterval(timer); }
 }
 
 async function checkWorker(plugin, plan) {
@@ -88,9 +90,14 @@ async function checkWorker(plugin, plan) {
   if (await digest(bytes) !== item.sha256) throw new Error("active-worker-hash-mismatch");
   const original = removeInsertions(new TextDecoder().decode(bytes), item.insertions);
   if (await digest(new TextEncoder().encode(original)) !== item.sourceSha256) throw new Error("original-worker-hash-mismatch");
+  return compareWorkers(original, new TextDecoder().decode(bytes), plugin.calls?.signal);
+}
+
+async function compareWorkers(original, output, signal) {
   const originalURL = URL.createObjectURL(new Blob([original], { type: "application/javascript" }));
-  const baseline = workerClient(originalURL);
-  const patched = workerClient(new URL("/worker.js", location.origin).href);
+  const patchedURL = URL.createObjectURL(new Blob([output], { type: "application/javascript" }));
+  const baseline = workerClient(originalURL, signal);
+  const patched = workerClient(patchedURL, signal);
   const results = [];
   try {
     for (const example of cases) {
@@ -104,7 +111,7 @@ async function checkWorker(plugin, plan) {
     }
     return { total: results.length, passed: results.filter(item => item.equalHTML && item.dollarUnchanged).length, cases: results };
   } finally {
-    baseline.close(); patched.close(); URL.revokeObjectURL(originalURL);
+    baseline.close(); patched.close(); URL.revokeObjectURL(originalURL); URL.revokeObjectURL(patchedURL);
   }
 }
 
@@ -124,7 +131,7 @@ async function checkReading(plugin) {
         const node = document.createElement("div");
         container.appendChild(node);
         await MarkdownRenderer.render(plugin.app, source, node, plugin.data.notes.preview, component);
-        await waitFor(() => node.querySelectorAll("mjx-container").length > 0);
+        await waitFor(() => node.querySelectorAll("mjx-container").length > 0, 10000, plugin.calls?.signal);
         pair.push({ math: node.querySelectorAll("mjx-container").length, errors: node.querySelectorAll("mjx-merror, .math-error").length });
       }
       results.push({ name: example.name, ...pair[1], matchesDollar: pair[0].math === pair[1].math && pair[1].errors === 0 });
@@ -134,7 +141,7 @@ async function checkReading(plugin) {
     container.appendChild(embedded);
     await MarkdownRenderer.render(plugin.app, "![[" + plugin.data.notes.embed.replace(/\.md$/, "") + "]]",
       embedded, plugin.data.notes.preview, component);
-    await waitFor(() => embedded.querySelectorAll(".markdown-embed mjx-container").length >= 2);
+    await waitFor(() => embedded.querySelectorAll(".markdown-embed mjx-container").length >= 2, 10000, plugin.calls?.signal);
     results.push({ name: "native embedded note", math: embedded.querySelectorAll(".markdown-embed mjx-container").length,
       matchesDollar: embedded.querySelectorAll("mjx-merror, .math-error").length === 0 });
     return { total: results.length, passed: results.filter(item => item.matchesDollar).length, cases: results };
@@ -149,7 +156,7 @@ async function checkEditor(plugin) {
     for (const name of ["dollar", "editor"]) {
       const file = plugin.app.vault.getAbstractFileByPath(plugin.data.notes[name]);
       await leaf.openFile(file, { state: { mode: "source", source: false } });
-      await waitFor(() => Boolean(leaf.view.editor?.cm?.state));
+      await waitFor(() => Boolean(leaf.view.editor?.cm?.state), 10000, plugin.calls?.signal);
       const cm = leaf.view.editor.cm;
       const tree = ensureSyntaxTree(cm.state, cm.state.doc.length, 1000);
       if (!tree) throw new Error("editor-syntax-incomplete");
@@ -185,6 +192,7 @@ async function runChecks(plugin, plan) {
     ["reading", () => checkReading(plugin)],
     ["editor", () => checkEditor(plugin)],
   ]) {
+    if (plugin.calls?.signal.aborted) throw new Error("plugin-unloaded");
     try { report.checks[name] = { ok: true, result: await operation() }; }
     catch (error) { report.checks[name] = { ok: false, error: error.message }; }
   }
@@ -196,4 +204,4 @@ async function runChecks(plugin, plan) {
   return report;
 }
 
-module.exports = { preview, editorStandard, editorDollar, embedSource, runChecks };
+module.exports = { preview, editorStandard, editorDollar, embedSource, runChecks, compareWorkers };

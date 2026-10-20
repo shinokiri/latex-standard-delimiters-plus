@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "version": "0.2.0",
+  "host": {
+    "id": "md.obsidian",
+    "version": "1.14.4",
+    "build": "389"
+  },
+  "adapter": "v2-f5dac38e2ee3c79f",
+  "helperSha256": "fab029fc4cf1fe0e7e67b4377b5ee1dbba9121ac85f5a389f7dc13da648a6aad",
+  "javascriptTests": {
+    "total": 37,
+    "passed": 37
+  },
+  "live": {
+    "ownInstalledAPKReadWithoutShizuku": true,
+    "dynamicBuildFromInstalledAPK": true,
+    "workerPreflightPairs": 32,
+    "workerLivePairs": 32,
+    "nativeReadingChecks": 10,
+    "editorTokenParity": true,
+    "selectionMoves": 25,
+    "nativeUndo": true,
+    "persistentColdStarts": 2,
+    "coldStartsRunFullCompatibilityChecks": false,
+    "externalCacheRemovalRestoresOfficialHashes": true,
+    "removedCacheDoesNotRecreateItself": true,
+    "automaticLoadingRestoredAfterRecoveryTest": true,
+    "debugPollingDisabledAfterSetup": true,
+    "oldPrivateTrialCacheRemoved": true
+  },
+  "package": {
+    "distributesHostCode": false,
+    "requiresAPKToBuildHelper": false,
+    "stagedFiles": 324,
+    "stagedBytes": 25465383
+  },
+  "reports": [
+    "live-package-read.json",
+    "live-daily.json",
+    "live-daily-recovery.json",
+    "daily-startup.json"
+  ],
+  "limits": [
+    "Android 1.14.4/build 389 only on a physical device.",
+    "No separately signed application, APK modification or application-data reset.",
+    "No new exhaustive physical touch/IME matrix; grammar adapter unchanged from the previously user-tested trial.",
+    "Future-version AST tests use synthetic renamed/formatted fixtures; unsupported structures stop automatic activation."
+  ],
+  "liveTestHelperSha256": "a5c139daf1587c754d1507787d3c8f8f63f20d758680a8054521998ad76f63fe",
+  "pythonLegacyBuilderGuardTests": {
+    "total": 3,
+    "passed": 3
+  },
+  "postLiveChanges": [
+    "External recovery also takes precedence when cache removal coincides with an official update (additional unit test).",
+    "Rebuild target identity is recorded before APK preparation, so early failures or interrupted upgrades cannot retry the same expensive work on every startup (additional unit tests).",
+    "Non-Android loading exits before accessing Android deployment state (additional unit test).",
+    "MIT license notices are embedded in the standalone helper.",
+    "The deployed native grammar, cache and bootstrap artifacts are unchanged from the timed device runs."
+  ]
+}

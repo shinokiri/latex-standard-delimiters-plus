@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-20T18:05:35.359Z",
+  "host": {
+    "id": "md.obsidian",
+    "version": "1.14.4",
+    "build": "389"
+  },
+  "apkBytes": 17244920,
+  "apkSha256": "b90bfb77d383112b423f5c0ec39a1081ca8a643da953683c11c1f212a32cab28",
+  "assets": 324,
+  "assetBytes": 25455014,
+  "coreHashes": {
+    "app.js": "7591ddf1df0414b26af79b9ae7fcaffc0f210332686520523fc3a391d675800e",
+    "worker.js": "a42f7927658132927e124131fdb7fc69fdb2853097c24158e0fdb245b87c34ae"
+  },
+  "shizukuRequired": false
+}

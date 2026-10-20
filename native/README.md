@@ -7,8 +7,12 @@ It adds no custom math widget, preview panel, click mapping, CSS or input handle
 The note's source is never rewritten.
 
 **This directory is an evaluation, not a stable native delimiter release.**
-The Android subdirectory now includes **Native Delimiter Trial**, an installable
-helper for a non-persistent trial inside the official signed application.
+The Android subdirectory includes **Native Delimiters 0.2.0**, an installable
+[daily loader](android/DAILY.md) inside the official signed application.
+It extends the historical non-persistent trial with direct cached startup,
+APK-local adaptation and externally recoverable persistent activation.
+The [daily verification](android/daily-verification.json) and
+[startup measurements](android/daily-startup.json) record the new scope.
 Full application startup, automatic native rendering/editor checks, explicit
 restore and complete process restart have passed on Android 1.14.4 / build 389.
 After the 0.1.1 timeout fix, the user reported no issues in manual device use.
@@ -29,10 +33,12 @@ headings retain the original delimiter spelling in their anchors and metadata.
 The editor path obtains both delimiter boundaries from real syntax tokens;
 there is no assumption that the opener is one character long.
 
-The patcher accepts only the locally evaluated **Obsidian 1.14.4 Android**
+The original offline patcher accepts only the locally evaluated **Obsidian 1.14.4 Android**
 `app.js` and `worker.js` checksums. It also checks the expected parser/mode hook
 counts, rejects repeat patching, and parses the generated JavaScript. It writes
 separate evaluation files; it does not modify an APK or installed application.
+The daily loader's separate `android/daily-patch.cjs` discovers hooks from
+syntax and gates unknown package activation on native behavior checks.
 
 ## Verification and reproduction
 

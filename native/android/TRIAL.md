@@ -1,5 +1,8 @@
 # Native Delimiter Trial
 
+This document describes the historical non-persistent 0.1.x helper.
+For automatic daily loading and update adaptation, see [DAILY.md](DAILY.md).
+
 This experimental helper lets the official **Obsidian Android 1.14.4 / build
 389** recognize `\(...\)` and `\[...\]` through its native grammars. Formula
 highlighting, rendering, widgets, preview and selection handling are then

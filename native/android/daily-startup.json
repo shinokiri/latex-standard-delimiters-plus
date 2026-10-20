@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "host": {
+    "id": "md.obsidian",
+    "version": "1.14.4",
+    "build": "389"
+  },
+  "helperVersion": "0.2.0",
+  "adapter": "v2-f5dac38e2ee3c79f",
+  "metric": "WebView navigation start to helper startup checks completed after workspace readiness; cold application process, warm OS caches; two samples per mode",
+  "officialLayoutReadyMs": [
+    1406,
+    1251
+  ],
+  "nativeLayoutReadyMs": [
+    1381,
+    1209
+  ],
+  "officialCheckedMs": [
+    1455,
+    1282
+  ],
+  "nativeCheckedMs": [
+    1381,
+    1209
+  ],
+  "firstActivation": {
+    "adaptedMs": 1520,
+    "preparedMs": 8968,
+    "validationMs": 2405
+  },
+  "limitations": [
+    "Only this device, vault and official version were measured.",
+    "Two samples do not establish a statistically significant speed improvement.",
+    "These page metrics exclude Android activity/process initialization and do not measure every equation finishing layout.",
+    "The launchToReportMs field includes Shizuku command transport and polling overhead; it is not icon-tap latency.",
+    "No future official release was installed; update handling is covered by state/structural tests and a rebuild from the currently installed APK."
+  ],
+  "runs": [
+    {
+      "label": "external-recovery",
+      "launchToReportMs": 5731,
+      "startup": {
+        "source": "official",
+        "timeOrigin": 1792520791541.3,
+        "readyAt": 1792520792975,
+        "pluginLoadedMs": 1164,
+        "layoutReadyMs": 1382,
+        "checkedMs": 1434,
+        "fullChecksRun": false
+      },
+      "phase": "blocked",
+      "automatic": false,
+      "persistent": false,
+      "error": null,
+      "blocked": "cache-removed"
+    },
+    {
+      "label": "native-1",
+      "launchToReportMs": 4453,
+      "startup": {
+        "source": "native-cache",
+        "timeOrigin": 1792520715242.2,
+        "readyAt": 1792520716623,
+        "pluginLoadedMs": 1153,
+        "layoutReadyMs": 1381,
+        "checkedMs": 1381,
+        "fullChecksRun": false
+      },
+      "phase": "active",
+      "automatic": true,
+      "persistent": true,
+      "error": null
+    },
+    {
+      "label": "native-2",
+      "launchToReportMs": 4322,
+      "startup": {
+        "source": "native-cache",
+        "timeOrigin": 1792520741021.6,
+        "readyAt": 1792520742230,
+        "pluginLoadedMs": 951,
+        "layoutReadyMs": 1209,
+        "checkedMs": 1209,
+        "fullChecksRun": false
+      },
+      "phase": "active",
+      "automatic": true,
+      "persistent": true,
+      "error": null
+    },
+    {
+      "label": "official-1",
+      "launchToReportMs": 4437,
+      "startup": {
+        "source": "official",
+        "timeOrigin": 1792520660286.7,
+        "readyAt": 1792520661741,
+        "pluginLoadedMs": 1188,
+        "layoutReadyMs": 1406,
+        "checkedMs": 1455,
+        "fullChecksRun": false
+      },
+      "phase": "off",
+      "automatic": false,
+      "persistent": false,
+      "error": null
+    },
+    {
+      "label": "official-2",
+      "launchToReportMs": 5765,
+      "startup": {
+        "source": "official",
+        "timeOrigin": 1792520674560.6,
+        "readyAt": 1792520675842,
+        "pluginLoadedMs": 1053,
+        "layoutReadyMs": 1251,
+        "checkedMs": 1282,
+        "fullChecksRun": false
+      },
+      "phase": "off",
+      "automatic": false,
+      "persistent": false,
+      "error": null
+    }
+  ]
+}

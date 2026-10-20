@@ -9,6 +9,9 @@
     "check:versions": "node scripts/check-versions.mjs",
     "lint": "eslint .",
     "test": "node --import tsx --test tests/*.test.ts",
+    "test:native-loader": "node --test native/android/*.test.mjs",
+    "build:native-loader": "node native/android/build-daily.mjs",
+    "package:native-loader": "node native/android/package-daily.mjs",
     "typecheck": "tsc --noEmit",
     "check": "npm run check:versions && npm run lint && npm test && npm run typecheck && npm run build",
     "package:release": "python3 scripts/package-release.py"
@@ -32,6 +35,8 @@
     "obsidian": "1.13.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.65.0",
+    "acorn": "8.18.0",
+    "fflate": "0.8.3"
   }
 }

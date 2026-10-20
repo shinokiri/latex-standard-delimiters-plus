@@ -1,5 +1,12 @@
 # Official Android installation: native delimiter trial
 
+The daily loader is documented in [DAILY.md](DAILY.md). It extends the
+validated trial with direct cached startup, local adaptation to the
+installed APK, compatibility-gated persistence and an externally removable
+cache for recovery. The original 0.1.x trial and its non-persistent recovery
+evidence are retained below; its restrictions do not describe the daily
+loader.
+
 The goal is native recognition of `\(...\)` and `\[...\]` while retaining the
 official Obsidian package, signature and update channel. This assessment does
 not select a separately signed APK or require root.

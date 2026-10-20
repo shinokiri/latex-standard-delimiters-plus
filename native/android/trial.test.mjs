@@ -81,7 +81,7 @@ async function pluginClass() {
     require(name) {
       if (name === "obsidian") return { Plugin: class {}, Notice: class {}, Modal: class {} };
       if (name === "./trial-core.cjs" || name === "./trial-async.cjs") return require(name);
-      if (name === "./trial-checks.cjs") return {};
+      if (name === "./trial-checks.cjs" || name === "./daily-package.cjs") return {};
       throw Error(name);
     },
     setTimeout, clearTimeout, TextEncoder, TextDecoder, Uint8Array, URL,
