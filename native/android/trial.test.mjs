@@ -80,7 +80,7 @@ async function pluginClass() {
     module: { exports: {} }, __TRIAL_PLAN__: {},
     require(name) {
       if (name === "obsidian") return { Plugin: class {}, Notice: class {}, Modal: class {} };
-      if (name === "./trial-core.cjs") return require(name);
+      if (name === "./trial-core.cjs" || name === "./trial-async.cjs") return require(name);
       if (name === "./trial-checks.cjs") return {};
       throw Error(name);
     },

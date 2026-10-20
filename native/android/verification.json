@@ -42,7 +42,7 @@
   "apkChanged": false,
   "activationAttempted": true,
   "fullApplicationBootTested": true,
-  "checkedAt": "2026-10-20T17:22:06.857241+00:00",
+  "checkedAt": "2026-10-20T17:43:56.916872+00:00",
   "checks": {
     "probeUnitTests": {
       "pass": 4,
@@ -65,7 +65,9 @@
       "nativeReadingChecks": 10,
       "editorSelectionChanges": 25,
       "nativeEditorTokenParity": true,
-      "nativeUndo": true
+      "nativeUndo": true,
+      "latestHelperVersion": "0.1.1",
+      "latestRuntimeAt": "2026-10-20T17:43:10.859Z"
     },
     "physicalEditingAndIME": "requires manual user test",
     "trialUnitTests": {
@@ -87,6 +89,11 @@
       "unitTested": true,
       "liveInitialPlusEnabled": false,
       "liveEnabledToDisabledToEnabledPathTested": false
+    },
+    "foregroundDeadlineTests": {
+      "pass": 5,
+      "fail": 0,
+      "scope": "Deterministic visibility and frozen event-loop tests; no new physical sleep/background trial claimed"
     }
   },
   "containerInspection": {
@@ -117,9 +124,9 @@
   "persistentOverrideWritten": false,
   "helper": {
     "name": "Native Delimiter Trial",
-    "version": "0.1.0",
-    "bytes": 105421,
-    "sha256": "b21ca2c2ef1cfdaf332783d46e102b1511f5f926dee93f95c6b0011086ef61a8",
+    "version": "0.1.1",
+    "bytes": 106984,
+    "sha256": "4a4a9340a724b74859bb06c09e2e6a67ff03c9ba5c4f3735623797404b78cd73",
     "localAuxiliaryFiles": 8,
     "localAuxiliaryBytes": 20403,
     "hostCodeDistributed": false

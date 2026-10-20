@@ -71,7 +71,7 @@ await build({
   define: { __TRIAL_PLAN__: JSON.stringify(plan) },
 });
 await writeFile(resolve(out, "manifest.json"), JSON.stringify({
-  id: "native-delimiter-trial", name: "Native Delimiter Trial", version: "0.1.0",
+  id: "native-delimiter-trial", name: "Native Delimiter Trial", version: "0.1.1",
   minAppVersion: "1.14.4", author: "shinokiri", isDesktopOnly: false,
   description: "Non-persistent Android native delimiter trial with verified local resources and recovery.",
 }, null, 2) + "\n");

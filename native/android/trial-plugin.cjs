@@ -4,6 +4,7 @@ const {
   toBase64, fromBase64, ownedAbsolutePath,
 } = require("./trial-core.cjs");
 const { preview, editorStandard, editorDollar, embedSource, runChecks } = require("./trial-checks.cjs");
+const { foregroundOperation } = require("./trial-async.cjs");
 const PLAN = __TRIAL_PLAN__;
 const PLUS = "latex-standard-delimiters-plus";
 const ACTIONS = new Set(["prepare", "start", "verify", "inspect", "prepare-restart", "restore", "cleanup", "reload-self"]);
@@ -25,6 +26,7 @@ class Progress extends Modal {
 class NativeDelimiterTrial extends Plugin {
   async onload() {
     this.active = true;
+    this.calls = new AbortController();
     this.busy = false;
     this.controlTimer = null;
     this.initialized = false;
@@ -46,13 +48,16 @@ class NativeDelimiterTrial extends Plugin {
   }
   onunload() {
     this.active = false;
+    this.calls.abort();
     window.clearInterval(this.controlTimer);
     this.progress?.close();
   }
   async persist() {
+    if (this.active === false) return;
     await this.saveData(this.data);
   }
   async report(extra = {}) {
+    if (this.active === false) return;
     const report = {
       schema: 1, generatedAt: new Date().toISOString(), phase: this.data.phase,
       host: { version: HOST.version, build: HOST.build }, persistentOverrideWritten: false,
@@ -65,6 +70,7 @@ class NativeDelimiterTrial extends Plugin {
     await this.app.vault.adapter.write(this.manifest.dir + "/trial-report.json", JSON.stringify(report, null, 2));
   }
   async recordError(error) {
+    if (this.active === false) return;
     this.data.error = error?.message || "unknown-error";
     await this.persist();
     await this.report({ error: this.data.error });
@@ -73,25 +79,25 @@ class NativeDelimiterTrial extends Plugin {
   async native(plugin, method, options = {}) {
     if (!NATIVE.has(`${plugin}.${method}`)) throw new Error("native-method-refused");
     if (!this.active) throw new Error("plugin-unloaded");
-    let timer;
-    try {
-      return await Promise.race([
-        window.Capacitor.nativePromise(plugin, method, options),
-        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("native-call-timeout")), 15000); }),
-      ]);
-    } finally { clearTimeout(timer); }
+    return foregroundOperation(() => window.Capacitor.nativePromise(plugin, method, options), {
+      document, signal: this.calls.signal,
+      timeoutMessage: `native-call-timeout:${plugin}.${method}`,
+    });
   }
   async localResource(path) {
     if (!safeAsset(path)) throw new Error("invalid-resource-path");
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000);
     try {
-      const response = await fetch(new URL("/" + path, location.origin).href, {
-        credentials: "same-origin", cache: "no-store", redirect: "error", signal: controller.signal,
+      return await foregroundOperation(async () => {
+        const response = await fetch(new URL("/" + path, location.origin).href, {
+          credentials: "same-origin", cache: "no-store", redirect: "error", signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("resource-fetch-failed");
+        return new Uint8Array(await response.arrayBuffer());
+      }, {
+        document, signal: this.calls.signal, timeoutMessage: "resource-fetch-timeout",
       });
-      if (!response.ok) throw new Error("resource-fetch-failed");
-      return new Uint8Array(await response.arrayBuffer());
-    } finally { clearTimeout(timer); }
+    } finally { controller.abort(); }
   }
   async privateRead(path) {
     if (!safePrivateBase(this.data.base) || !safeAsset(path)) throw new Error("private-read-refused");
@@ -147,6 +153,7 @@ class NativeDelimiterTrial extends Plugin {
         this.data.phase = "active";
         this.data.action = { name: "start", status: "complete" };
         this.data.boot = { success: true, exactPatchedResources: true, plusInactive: true, at: new Date().toISOString() };
+        delete this.data.error;
         await this.persist();
         await this.report();
         await this.verify();
@@ -215,6 +222,7 @@ class NativeDelimiterTrial extends Plugin {
       await this.persist();
       await this.report();
     } catch (error) {
+      if (!this.active) return;
       if (action === "start" && this.data.phase === "switching" && await this.currentPath() === "public") {
         await this.restorePlus();
         this.data.phase = "staged";
@@ -324,7 +332,8 @@ class NativeDelimiterTrial extends Plugin {
         this.data.stagedFiles !== PLAN.assets.length) await this.prepare();
     await this.originalPreflight();
     this.showProgress("再次校验全部资源，并等待当前笔记保存。");
-    for (const item of PLAN.assets) {
+    for (const [index, item] of PLAN.assets.entries()) {
+      this.progress.update(`再次校验资源 ${index + 1}/${PLAN.assets.length}，完成后保存笔记并重载。`);
       if (await digest(await this.privateRead(item.path)) !== item.sha256) throw new Error("staged-resource-changed");
     }
     await this.saveOpenViews();

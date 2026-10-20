@@ -22,7 +22,7 @@ dependencies:
 
 ```sh
 node native/android/build-trial.mjs /path/to/your/Obsidian.apk
-node --test native/android/probe.test.mjs native/android/trial.test.mjs
+node --test native/android/*.test.mjs
 ```
 
 The builder needs the locked TypeScript and esbuild packages. It generates:
@@ -64,6 +64,13 @@ or an open text view cannot be confirmed saved. Finish the edit and retry.
 It creates a uniquely named `Native Delimiter Trial …` folder with comparison
 and editor test notes; it does not convert existing notes.
 
+Helper **0.1.1** pauses native/resource-read deadlines in the background and
+does not start a new native call until the page is visible. Long WebView
+suspensions do not become instant timeouts on resume. A genuinely stalled
+foreground call still times out and reports its interface name. Calls are
+never automatically repeated, because their native side may already have
+completed. Successful startup also clears a previous attempt's error.
+
 The core switch affects the **whole application process**, not just the vault
 where the helper is installed. Keep other delimiter renderers inactive.
 Avoid switching vaults during the trial: this helper must be enabled in the
@@ -104,7 +111,9 @@ reports record the original served script hashes afterward. The trial passed:
 - 10 native reading checks, including tables and an embedded note.
 - Matching native math syntax token names, 25 selection moves without source
   changes, and insertion followed by native undo.
-- 13 JavaScript guard tests and 3 Python builder tests passed locally.
+- 18 JavaScript guard tests and 3 Python builder tests passed locally. Five
+  deadline tests cover background waits, stale timers, a suspended event loop,
+  a real foreground timeout and unloading with a call still pending.
 
 These checks do not certify physical tap positioning, Android IME composition,
 preview geometry, full table editing, all malformed formulas, or other

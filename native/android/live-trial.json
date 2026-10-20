@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-10-20T17:02:23.325Z",
+  "generatedAt": "2026-10-20T17:43:10.863Z",
   "phase": "active",
   "host": {
     "version": "1.14.4",
@@ -14,10 +14,10 @@
     "success": true,
     "exactPatchedResources": true,
     "plusInactive": true,
-    "at": "2026-10-20T17:02:20.838Z"
+    "at": "2026-10-20T17:43:08.251Z"
   },
   "tests": {
-    "generatedAt": "2026-10-20T17:02:20.870Z",
+    "generatedAt": "2026-10-20T17:43:08.288Z",
     "physicalTouchAndIME": "requires-user-test",
     "checks": {
       "worker": {
@@ -337,8 +337,22 @@
     },
     "passed": true
   },
+  "runtime": {
+    "at": "2026-10-20T17:43:10.859Z",
+    "version": "1.14.4",
+    "build": "389",
+    "source": "trial",
+    "hashes": {
+      "app.js": "13cf3b30fa638111b620dc601333f1f241a2022a864a7d955ca3140501d5bcd1",
+      "worker.js": "c6685b83e8d7e9c4754181fff615fa3340b4186bf8b314cf364053397f486675"
+    }
+  },
   "action": {
     "name": "start",
     "status": "complete"
+  },
+  "installedHelper": {
+    "version": "0.1.1",
+    "sha256": "4a4a9340a724b74859bb06c09e2e6a67ff03c9ba5c4f3735623797404b78cd73"
   }
 }

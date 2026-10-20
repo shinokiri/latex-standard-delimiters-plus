@@ -175,7 +175,7 @@ state.
 With the repository's locked development dependencies available:
 
 ```sh
-node --test native/android/probe.test.mjs native/android/trial.test.mjs
+node --test native/android/*.test.mjs
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
   -s native/android -p 'test_*.py' -v
 python3 native/android/prepare-overlay.py /path/to/your/Obsidian.apk
@@ -203,8 +203,9 @@ The live automatic checks passed:
   restores the original generated test note.
 - Explicit restore and complete Android process restart both return to the
   original app/worker hashes.
-- 13 JavaScript tests (4 probe, 9 trial) and 3 Python resource-builder guard
-  tests pass. Conditional restoration of an originally enabled Plus is
+- 18 JavaScript tests (4 probe, 9 trial, 5 foreground-deadline tests) and
+  3 Python resource-builder guard tests pass.
+  Conditional restoration of an originally enabled Plus is
   unit-tested; Plus was already disabled at the recorded live trial start.
 
 Physical taps, IME composition, rendered geometry, table editing and every
