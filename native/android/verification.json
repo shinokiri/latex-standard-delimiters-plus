@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "host": {
+    "platform": "Android",
+    "version": "1.14.4",
+    "build": "389"
+  },
+  "stage": "offline-resource-directory-only",
+  "assetCount": 324,
+  "originalBytes": 25455014,
+  "stagedBytes": 25463021,
+  "changedAssets": [
+    "app.js",
+    "worker.js"
+  ],
+  "unchangedAssets": 322,
+  "patches": {
+    "app.js": {
+      "kind": "app",
+      "hostVersion": "1.14.4",
+      "hostPlatform": "Android",
+      "centralParserHooks": 1,
+      "editorModeHooks": 1,
+      "originalBytes": 3968611,
+      "patchedBytes": 3972627,
+      "originalSha256": "7591ddf1df0414b26af79b9ae7fcaffc0f210332686520523fc3a391d675800e",
+      "patchedSha256": "13cf3b30fa638111b620dc601333f1f241a2022a864a7d955ca3140501d5bcd1"
+    },
+    "worker.js": {
+      "kind": "worker",
+      "hostVersion": "1.14.4",
+      "hostPlatform": "Android",
+      "centralParserHooks": 1,
+      "editorModeHooks": 0,
+      "originalBytes": 239777,
+      "patchedBytes": 243768,
+      "originalSha256": "a42f7927658132927e124131fdb7fc69fdb2853097c24158e0fdb245b87c34ae",
+      "patchedSha256": "c6685b83e8d7e9c4754181fff615fa3340b4186bf8b314cf364053397f486675"
+    }
+  },
+  "apkChanged": false,
+  "activationAttempted": false,
+  "fullApplicationBootTested": false,
+  "checkedAt": "2026-10-20T16:32:50.263986+00:00",
+  "checks": {
+    "probeUnitTests": {
+      "pass": 4,
+      "fail": 0
+    },
+    "overlayGuardTests": {
+      "pass": 3,
+      "fail": 0
+    },
+    "liveBridgeProbe": {
+      "passed": true,
+      "report": "live-probe.json",
+      "activationAttempted": false
+    },
+    "liveResourceSwitch": "not attempted",
+    "physicalEditingAndIME": "not tested"
+  },
+  "containerInspection": {
+    "method": "Read-only installed APK DEX and configuration inspection",
+    "bridgeClass": "com.getcapacitor.k",
+    "corePluginRegistered": "WebView",
+    "registeredBy": "m0",
+    "readBasePath": "H",
+    "setFileBasePath": "C0",
+    "setAssetBasePath": "B0",
+    "versionReset": "Q",
+    "startup": "W",
+    "disableDeployDefault": false,
+    "disableDeployConfigOverride": false,
+    "shizukuUid": 2000,
+    "shizukuSELinux": "u:r:shell:s0",
+    "installedPackageDebuggable": false,
+    "inspectedFilesSha256": {
+      "classes.dex": "c82c18302ab7f3e810df433a974894c68ef1049c7dad38abe4dd3ae407339855",
+      "assets/native-bridge.js": "6e57635767369af304b217171b84812350c117d2a94b91bfefb112d03c4169f1",
+      "assets/capacitor.config.json": "538f87b25f2a21514c87a26581814aa5d90a050f725b76d0357960a402b6bba7",
+      "res/xml/config.xml": "f8d99b4033143d2601247c0edaee2c78cfe763b6a41c341f8743f485805ef601"
+    }
+  }
+}

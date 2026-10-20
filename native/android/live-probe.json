@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-20T16:33:21.462Z",
+  "probeOnly": true,
+  "platform": "android",
+  "nativeBridge": true,
+  "headerMethods": {
+    "App": [
+      "addListener",
+      "checkPermissions",
+      "exitApp",
+      "getFonts",
+      "getInfo",
+      "getLaunchUrl",
+      "getManagedPolicy",
+      "getState",
+      "isInstalledFromStore",
+      "minimizeApp",
+      "removeAllListeners",
+      "removeListener",
+      "requestPermissions",
+      "requestUrl",
+      "setQuickActions",
+      "takeScreenshot"
+    ],
+    "WebView": [
+      "addListener",
+      "checkPermissions",
+      "getServerBasePath",
+      "persistServerBasePath",
+      "removeAllListeners",
+      "removeListener",
+      "requestPermissions",
+      "setServerAssetPath",
+      "setServerBasePath"
+    ],
+    "Filesystem": [
+      "addListener",
+      "appendFile",
+      "checkPermissions",
+      "checkPerms",
+      "choose",
+      "copy",
+      "deleteFile",
+      "downloadFile",
+      "getUri",
+      "mkdir",
+      "open",
+      "readFile",
+      "readdir",
+      "removeAllListeners",
+      "removeListener",
+      "rename",
+      "requestPermissions",
+      "requestPerms",
+      "rmdir",
+      "setTimes",
+      "startWatch",
+      "stat",
+      "stopWatch",
+      "watchAndStatAll",
+      "writeFile"
+    ]
+  },
+  "checks": {
+    "app": {
+      "ok": true,
+      "value": {
+        "id": "md.obsidian",
+        "version": "1.14.4",
+        "build": "389"
+      }
+    },
+    "server": {
+      "ok": true,
+      "value": {
+        "pathKind": "bundled-public-assets"
+      }
+    },
+    "privateFiles": {
+      "ok": true,
+      "value": {
+        "pathKind": "obsidian-private-directory"
+      }
+    },
+    "workerResource": {
+      "ok": true,
+      "value": {
+        "bytes": 239777,
+        "sha256": "a42f7927658132927e124131fdb7fc69fdb2853097c24158e0fdb245b87c34ae",
+        "matchesEvaluatedHost": true
+      }
+    },
+    "appResource": {
+      "ok": true,
+      "value": {
+        "bytes": 3968611,
+        "sha256": "7591ddf1df0414b26af79b9ae7fcaffc0f210332686520523fc3a391d675800e",
+        "matchesEvaluatedHost": true
+      }
+    }
+  },
+  "activationAttempted": false,
+  "readiness": {
+    "officialApp": true,
+    "evaluatedBinary": true,
+    "bundledResourcesActive": true,
+    "exactResources": true,
+    "privateStorageAddressable": true,
+    "switchMethodAdvertised": true,
+    "restoreMethodAdvertised": true
+  },
+  "liveReadChecksPassed": true
+}

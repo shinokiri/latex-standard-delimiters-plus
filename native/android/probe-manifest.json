@@ -1,0 +1,9 @@
+{
+  "id": "native-delimiter-probe",
+  "name": "Native Delimiter Probe",
+  "version": "0.0.1",
+  "minAppVersion": "1.14.4",
+  "description": "Read-only Android container checks for native delimiter research. Does not activate patches or edit notes.",
+  "author": "shinokiri",
+  "isDesktopOnly": false
+}

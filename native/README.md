@@ -6,9 +6,10 @@ own math tokens, source highlighting, widgets, selection handling and previews.
 It adds no custom math widget, preview panel, click mapping, CSS or input handler.
 The note's source is never rewritten.
 
-**This directory is an evaluation, not an installable release.** No modified
-Obsidian binary, extracted host code or private note is distributed. The stable
-plugin is unchanged.
+**This directory is an evaluation, not a native delimiter release.** The
+Android subdirectory contains an installable **read-only probe**, not an
+activation plugin. No modified Obsidian binary, extracted host code or private
+note is distributed. The stable plugin is unchanged.
 
 ## Two evaluated approaches
 
@@ -64,17 +65,37 @@ Native recognition should ideally be maintained in Obsidian's own shared
 grammars. The current public API offers no registration point that covers all
 the native parsing entry points inspected in this evaluation.
 
-An independently signed Android build cannot serve as an ordinary update of
-the official signed installation. It needs a separate application identity or
-replacement installation and a maintained update process. See
+The delivery requirement is to retain the official signed installation and
+its normal updates. An independently signed Android build is **not** the
+selected route: it cannot serve as an ordinary update of the official signed
+installation. See
 [Android's signing documentation](https://developer.android.com/studio/publish/app-signing).
-Obsidian's [current terms](https://obsidian.md/terms) also restrict modification
-and redistribution of the application; an upstream change or an agreed extension
-point avoids making a redistributed modified app the project deliverable.
 
-The next validation gate for a host change is an independently installed test
-build using synthetic notes, then real device testing of editing, IME, undo,
-tables, embeds and mode switching. Its test vault must keep Plus and other
-delimiter renderers disabled so they do not override the native path.
-Evaluation of that route does not authorize
-uninstalling the user's official application or migrating their vaults.
+Further inspection found a different Android delivery candidate: the official
+1.14.4 APK includes and registers Capacitor's core `WebView` plugin. Its
+`setServerBasePath` can load a local web-resource directory without changing
+the APK. The installed native bridge also contains the binary-version check
+that clears a persisted directory after an application update. This is an
+internal container interface, not a documented Obsidian plugin extension point.
+
+See [the Android assessment](android/README.md) for the installed-APK evidence,
+offline resource build, read-only runtime probe, and recovery limitations.
+The directory builder changed only `app.js` and `worker.js`; the other 322
+resources remained byte-identical. This establishes a candidate delivery
+mechanism, **not** a successful live resource switch or full app startup.
+
+The [live read-only bridge probe](android/live-probe.json) passed on the
+official installed app: the native getters work, switch/restore methods are
+advertised, and both currently served bundle hashes match the evaluated host.
+The next gate is a non-persistent trial with synthetic notes and real
+editing/IME/undo/table/embed checks.
+The trial must keep Plus and other delimiter renderers disabled so they do
+not override the native path. The core switch is process-wide, so choosing a
+test vault alone does not isolate the running application. No trial or
+persistent resource switch is performed by the supplied probe.
+
+Obsidian's [current terms](https://obsidian.md/terms) restrict modification and
+redistribution of the application. This repository publishes only our adapter,
+tools and measurements; users supply their own matching installed resources.
+An upstream grammar change or supported extension point remains preferable
+for long-term maintenance.
