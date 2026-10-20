@@ -121,6 +121,11 @@ platforms. Compare the generated standard/dollar examples manually in Live
 Preview and Reading view. The helper adds no custom input behavior to hide
 differences.
 
+On 2026-10-20, after installing helper 0.1.1, the user reported no issues in
+manual device use. This is a successful user smoke test; individual formulas,
+tap positions and IME scenarios were not separately recorded. It does not
+change the trial's non-persistent activation or platform/version scope.
+
 The existing [parsing benchmark](../performance.json) measures only parsing.
 The 24.3 MiB directory is an on-disk deployment cost, not a measurement of
 memory use or rendering overhead. The helper's local request polling pauses

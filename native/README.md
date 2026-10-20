@@ -11,7 +11,8 @@ The Android subdirectory now includes **Native Delimiter Trial**, an installable
 helper for a non-persistent trial inside the official signed application.
 Full application startup, automatic native rendering/editor checks, explicit
 restore and complete process restart have passed on Android 1.14.4 / build 389.
-Physical touch and IME behavior still require manual testing.
+After the 0.1.1 timeout fix, the user reported no issues in manual device use.
+The individual touch and IME scenarios were not separately enumerated.
 No modified Obsidian binary, extracted host code or private note is distributed.
 The stable Plus plugin is unchanged.
 

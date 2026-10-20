@@ -83,6 +83,6 @@
     "fullApplicationBoot": "passed",
     "explicitRestore": "passed",
     "completeProcessRestart": "passed",
-    "physicalTouchAndIME": "not tested"
+    "physicalTouchAndIME": "User smoke test reported no issues after helper 0.1.1; detailed touch/IME scenario coverage not recorded"
   }
 }
