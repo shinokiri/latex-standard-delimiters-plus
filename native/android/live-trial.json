@@ -1,0 +1,344 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-20T17:02:23.325Z",
+  "phase": "active",
+  "host": {
+    "version": "1.14.4",
+    "build": "389"
+  },
+  "persistentOverrideWritten": false,
+  "stagedFiles": 325,
+  "stagedBytes": 25464521,
+  "plusRestoreRequired": false,
+  "boot": {
+    "success": true,
+    "exactPatchedResources": true,
+    "plusInactive": true,
+    "at": "2026-10-20T17:02:20.838Z"
+  },
+  "tests": {
+    "generatedAt": "2026-10-20T17:02:20.870Z",
+    "physicalTouchAndIME": "requires-user-test",
+    "checks": {
+      "worker": {
+        "ok": true,
+        "result": {
+          "total": 32,
+          "passed": 32,
+          "cases": [
+            {
+              "name": "inline",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "inline at start",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "display",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "one-row display",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "indented display",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "list",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "quote",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "callout",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "mixed",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "boxed",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "adjacent punctuation",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "table",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "emphasis",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "source examples",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "frontmatter",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "escaped opener",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "body backslash",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "paragraph offsets",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "heading",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "checklist",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "nested quote",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "nested list",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "footnote",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "highlight",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "strikethrough",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "block id",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "unicode",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "adjacent formulas",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "display in table",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "blank line in display",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "escaped dollar in body",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            },
+            {
+              "name": "multiple display blocks",
+              "equalHTML": true,
+              "dollarUnchanged": true
+            }
+          ]
+        }
+      },
+      "reading": {
+        "ok": true,
+        "result": {
+          "total": 10,
+          "passed": 10,
+          "cases": [
+            {
+              "name": "inline",
+              "math": 1,
+              "errors": 0,
+              "matchesDollar": true
+            },
+            {
+              "name": "display",
+              "math": 1,
+              "errors": 0,
+              "matchesDollar": true
+            },
+            {
+              "name": "indented display",
+              "math": 1,
+              "errors": 0,
+              "matchesDollar": true
+            },
+            {
+              "name": "list",
+              "math": 1,
+              "errors": 0,
+              "matchesDollar": true
+            },
+            {
+              "name": "quote",
+              "math": 1,
+              "errors": 0,
+              "matchesDollar": true
+            },
+            {
+              "name": "callout",
+              "math": 1,
+              "errors": 0,
+              "matchesDollar": true
+            },
+            {
+              "name": "boxed",
+              "math": 1,
+              "errors": 0,
+              "matchesDollar": true
+            },
+            {
+              "name": "table",
+              "math": 2,
+              "errors": 0,
+              "matchesDollar": true
+            },
+            {
+              "name": "display in table",
+              "math": 1,
+              "errors": 0,
+              "matchesDollar": true
+            },
+            {
+              "name": "native embedded note",
+              "math": 2,
+              "matchesDollar": true
+            }
+          ]
+        }
+      },
+      "editor": {
+        "ok": true,
+        "result": {
+          "syntaxMatchesDollar": true,
+          "selectionMoves": 25,
+          "sourceUnchanged": true,
+          "undoRestoresSource": true,
+          "mathTokenNames": [
+            [
+              "formatting_formatting-math_formatting-math-begin_keyword_math",
+              "math_variable-2",
+              "math_tag",
+              "math_number",
+              "math",
+              "math_tag",
+              "bracket_math",
+              "math_number",
+              "bracket_math",
+              "math_variable-2",
+              "bracket_math",
+              "formatting_formatting-math_formatting-math-end_keyword_math_math-",
+              "HyperMD-math",
+              "formatting_formatting-math_formatting-math-begin_keyword_math_math-block",
+              "HyperMD-math",
+              "math_tag",
+              "bracket_math",
+              "math_variable-2",
+              "math_tag",
+              "math_number",
+              "math",
+              "math_variable-2",
+              "math_tag",
+              "math_number",
+              "math",
+              "math_variable-2",
+              "math_tag",
+              "math_number",
+              "bracket_math",
+              "HyperMD-math",
+              "formatting_formatting-math_formatting-math-end_keyword_math_math-"
+            ],
+            [
+              "formatting_formatting-math_formatting-math-begin_keyword_math",
+              "math_variable-2",
+              "math_tag",
+              "math_number",
+              "math",
+              "math_tag",
+              "bracket_math",
+              "math_number",
+              "bracket_math",
+              "math_variable-2",
+              "bracket_math",
+              "formatting_formatting-math_formatting-math-end_keyword_math_math-",
+              "HyperMD-math",
+              "formatting_formatting-math_formatting-math-begin_keyword_math_math-block",
+              "HyperMD-math",
+              "math_tag",
+              "bracket_math",
+              "math_variable-2",
+              "math_tag",
+              "math_number",
+              "math",
+              "math_variable-2",
+              "math_tag",
+              "math_number",
+              "math",
+              "math_variable-2",
+              "math_tag",
+              "math_number",
+              "bracket_math",
+              "HyperMD-math",
+              "formatting_formatting-math_formatting-math-end_keyword_math_math-"
+            ]
+          ]
+        }
+      }
+    },
+    "passed": true
+  },
+  "action": {
+    "name": "start",
+    "status": "complete"
+  }
+}

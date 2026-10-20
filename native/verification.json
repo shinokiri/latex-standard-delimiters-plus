@@ -1,6 +1,6 @@
 {
   "evaluatedAt": "2026-10-20T16:01:11.753961+00:00",
-  "status": "research prototype; no APK installation or vault changes",
+  "status": "Historical isolated-parser evaluation; see subsequent Android live verification",
   "stableBase": {
     "version": "0.4.13",
     "commit": "b4c6aa07340e96b2d813e3ad761c6251bb28e0a9"
@@ -77,5 +77,12 @@
   ],
   "performance": "performance.json; small samples, parser-only timings, not UI latency",
   "originalPluginAudit": "plus-audit.json; synthetic data only, no stable plugin changes",
-  "distribution": "Own evaluation sources, synthetic tests and sanitized reports only; no app bundles, generated host derivatives or private notes"
+  "distribution": "Own evaluation sources, synthetic tests and sanitized reports only; no app bundles, generated host derivatives or private notes",
+  "followUpLiveVerification": {
+    "report": "android/verification.json",
+    "fullApplicationBoot": "passed",
+    "explicitRestore": "passed",
+    "completeProcessRestart": "passed",
+    "physicalTouchAndIME": "not tested"
+  }
 }

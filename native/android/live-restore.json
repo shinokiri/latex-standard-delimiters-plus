@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-20T17:07:29.113Z",
+  "phase": "restored",
+  "host": {
+    "version": "1.14.4",
+    "build": "389"
+  },
+  "persistentOverrideWritten": false,
+  "stagedFiles": 325,
+  "stagedBytes": 25464521,
+  "plusRestoreRequired": false,
+  "boot": {
+    "success": true,
+    "exactPatchedResources": true,
+    "plusInactive": true,
+    "at": "2026-10-20T17:02:20.838Z"
+  },
+  "runtime": {
+    "at": "2026-10-20T17:07:29.106Z",
+    "version": "1.14.4",
+    "build": "389",
+    "source": "official",
+    "hashes": {
+      "app.js": "7591ddf1df0414b26af79b9ae7fcaffc0f210332686520523fc3a391d675800e",
+      "worker.js": "a42f7927658132927e124131fdb7fc69fdb2853097c24158e0fdb245b87c34ae"
+    }
+  },
+  "action": {
+    "name": "reload-self",
+    "status": "complete"
+  },
+  "observation": {
+    "description": "Explicit restore, followed by runtime inspection while official resources were active.",
+    "historicalFields": [
+      "boot",
+      "tests"
+    ],
+    "currentResourceField": "runtime"
+  }
+}

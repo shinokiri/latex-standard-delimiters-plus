@@ -43,23 +43,32 @@ export async function patchCore(input, kind) {
     to: parsers[0].node.body.getStart(ast) + 1,
     text: `__nativeLsd.installGrammar(${parsers[0].parser});`
   }];
-  for (const mode of modes) changes.push({
-    from: mode.getStart(ast), to: mode.end,
-    text: `__nativeLsd.wrapFactory(${mode.getText(ast)})`
-  });
+  // Insert around the existing factory rather than copying host code into a
+  // distributable patch plan. All inserted text is our own adapter.
+  for (const mode of modes) changes.push(
+    {from: mode.getStart(ast), to: mode.getStart(ast), text: "__nativeLsd.wrapFactory("},
+    {from: mode.end, to: mode.end, text: ")"}
+  );
   let output = input;
   for (const change of changes.sort((a, b) => b.from - a.from)) output = output.slice(0, change.from) + change.text + output.slice(change.to);
   const runtime = await build({
     entryPoints: [resolve(import.meta.dirname, "src/core-runtime.ts")],
     bundle: true, format: "iife", globalName: "__nativeLsd", write: false, minify: true, target: "es2022"
   });
-  output = `/* native-lsd-core-alias: evaluation artifact; Obsidian host code is not redistributed */\n(()=>{\n${runtime.outputFiles[0].text}\n${output}\n})();\n`;
+  const prefix = `/* native-lsd-core-alias: evaluation artifact; Obsidian host code is not redistributed */\n(()=>{\n${runtime.outputFiles[0].text}\n`;
+  const suffix = "\n})();\n";
+  output = prefix + output + suffix;
   if (ts.createSourceFile("patched.js", output, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS).parseDiagnostics.length) {
     throw new Error("Patched bundle did not parse");
   }
   return {
     output,
     runtime: runtime.outputFiles[0].text,
+    insertions: [
+      {at: 0, text: prefix},
+      ...changes.map(change => ({at: change.from, text: change.text})),
+      {at: input.length, text: suffix}
+    ].sort((a, b) => a.at - b.at),
     report: {kind, hostVersion: "1.14.4", hostPlatform: "Android", centralParserHooks: 1, editorModeHooks: modes.length, originalBytes: Buffer.byteLength(input),
       patchedBytes: Buffer.byteLength(output), originalSha256: hash(input), patchedSha256: hash(output)}
   };

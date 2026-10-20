@@ -6,6 +6,11 @@ This is a fork of [DicksonKam/latex-standard-delimiters](https://github.com/Dick
 
 **Current release: 0.4.13 · Obsidian 1.13.7+ · Plugin ID: `latex-standard-delimiters-plus`**
 
+On the `research/native-delimiters-1.14.4` branch, a separate
+[native delimiter trial](native/android/TRIAL.md) adds grammar aliases inside
+the official Android app. It is an experimental, version-specific delivery
+route; the stable Plus release below remains unchanged.
+
 ## Features
 
 - Render inline and display formulas, including multiline displays in lists and blockquotes. Center standalone displays in their available content area.

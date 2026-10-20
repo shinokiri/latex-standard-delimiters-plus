@@ -5,15 +5,16 @@
     "version": "1.14.4",
     "build": "389"
   },
-  "stage": "offline-resource-directory-only",
-  "assetCount": 324,
+  "stage": "live-non-persistent-resource-trial",
+  "assetCount": 325,
   "originalBytes": 25455014,
-  "stagedBytes": 25463021,
+  "stagedBytes": 25464521,
   "changedAssets": [
     "app.js",
-    "worker.js"
+    "worker.js",
+    "index.html"
   ],
-  "unchangedAssets": 322,
+  "unchangedAssets": 321,
   "patches": {
     "app.js": {
       "kind": "app",
@@ -39,9 +40,9 @@
     }
   },
   "apkChanged": false,
-  "activationAttempted": false,
-  "fullApplicationBootTested": false,
-  "checkedAt": "2026-10-20T16:32:50.263986+00:00",
+  "activationAttempted": true,
+  "fullApplicationBootTested": true,
+  "checkedAt": "2026-10-20T17:22:06.857241+00:00",
   "checks": {
     "probeUnitTests": {
       "pass": 4,
@@ -56,8 +57,37 @@
       "report": "live-probe.json",
       "activationAttempted": false
     },
-    "liveResourceSwitch": "not attempted",
-    "physicalEditingAndIME": "not tested"
+    "liveResourceSwitch": {
+      "passed": true,
+      "report": "live-trial.json",
+      "exactPatchedResources": true,
+      "workerPairs": 32,
+      "nativeReadingChecks": 10,
+      "editorSelectionChanges": 25,
+      "nativeEditorTokenParity": true,
+      "nativeUndo": true
+    },
+    "physicalEditingAndIME": "requires manual user test",
+    "trialUnitTests": {
+      "pass": 9,
+      "fail": 0
+    },
+    "explicitRestore": {
+      "passed": true,
+      "report": "live-restore.json",
+      "actualOriginalHashesConfirmed": true
+    },
+    "completeProcessRestart": {
+      "passed": true,
+      "report": "live-restart.json",
+      "saveCheckpointVerified": true,
+      "actualOriginalHashesConfirmed": true
+    },
+    "conditionalPlusRecovery": {
+      "unitTested": true,
+      "liveInitialPlusEnabled": false,
+      "liveEnabledToDisabledToEnabledPathTested": false
+    }
   },
   "containerInspection": {
     "method": "Read-only installed APK DEX and configuration inspection",
@@ -80,5 +110,26 @@
       "assets/capacitor.config.json": "538f87b25f2a21514c87a26581814aa5d90a050f725b76d0357960a402b6bba7",
       "res/xml/config.xml": "f8d99b4033143d2601247c0edaee2c78cfe763b6a41c341f8743f485805ef601"
     }
+  },
+  "addedAssets": [
+    "native-lsd-trial-bootstrap.js"
+  ],
+  "persistentOverrideWritten": false,
+  "helper": {
+    "name": "Native Delimiter Trial",
+    "version": "0.1.0",
+    "bytes": 105421,
+    "sha256": "b21ca2c2ef1cfdaf332783d46e102b1511f5f926dee93f95c6b0011086ef61a8",
+    "localAuxiliaryFiles": 8,
+    "localAuxiliaryBytes": 20403,
+    "hostCodeDistributed": false
+  },
+  "scope": {
+    "officialApkChanged": false,
+    "privateUserNotesConverted": false,
+    "activeScope": "entire app process",
+    "automaticActivationOnStartup": false,
+    "desktopOrIosValidated": false,
+    "startupTimeoutFailureInducedOnDevice": false
   }
 }

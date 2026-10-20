@@ -6,10 +6,14 @@ own math tokens, source highlighting, widgets, selection handling and previews.
 It adds no custom math widget, preview panel, click mapping, CSS or input handler.
 The note's source is never rewritten.
 
-**This directory is an evaluation, not a native delimiter release.** The
-Android subdirectory contains an installable **read-only probe**, not an
-activation plugin. No modified Obsidian binary, extracted host code or private
-note is distributed. The stable plugin is unchanged.
+**This directory is an evaluation, not a stable native delimiter release.**
+The Android subdirectory now includes **Native Delimiter Trial**, an installable
+helper for a non-persistent trial inside the official signed application.
+Full application startup, automatic native rendering/editor checks, explicit
+restore and complete process restart have passed on Android 1.14.4 / build 389.
+Physical touch and IME behavior still require manual testing.
+No modified Obsidian binary, extracted host code or private note is distributed.
+The stable Plus plugin is unchanged.
 
 ## Two evaluated approaches
 
@@ -52,12 +56,13 @@ exercise incremental edits, every selection offset in an edited example,
 restricted table-cell syntax, long formulas, async wrapper disposal and patch
 version guards. Without local host fixtures, host-dependent tests are skipped.
 
-These are isolated parser/CodeMirror tests and JavaScript syntax checks. They
-do **not** establish full application startup, Android keyboard/touch behavior,
+These particular commands run isolated parser/CodeMirror tests and JavaScript
+syntax checks. They do **not** establish Android keyboard/touch behavior,
 DOM geometry, every embed/table UI interaction, or desktop/iOS compatibility.
 The ordinary plugin prototype is deliberately not packaged for installation.
 See `verification.json` for the recorded run and `performance.json` for the
-strictly scoped parsing benchmark.
+strictly scoped parsing benchmark. The later full-application trial has its
+own [Android verification report](android/verification.json).
 
 ## Delivery assessment
 
@@ -78,21 +83,25 @@ the APK. The installed native bridge also contains the binary-version check
 that clears a persisted directory after an application update. This is an
 internal container interface, not a documented Obsidian plugin extension point.
 
-See [the Android assessment](android/README.md) for the installed-APK evidence,
-offline resource build, read-only runtime probe, and recovery limitations.
-The directory builder changed only `app.js` and `worker.js`; the other 322
-resources remained byte-identical. This establishes a candidate delivery
-mechanism, **not** a successful live resource switch or full app startup.
+See [the Android assessment](android/README.md) for the installed-APK evidence
+and [the trial guide](android/TRIAL.md) for building, using and reverting the
+helper. The parser adapter changes only `app.js` and `worker.js`. Trial delivery
+also inserts an early recovery script in `index.html`; 321 original resources
+remain byte-identical.
 
-The [live read-only bridge probe](android/live-probe.json) passed on the
-official installed app: the native getters work, switch/restore methods are
-advertised, and both currently served bundle hashes match the evaluated host.
-The next gate is a non-persistent trial with synthetic notes and real
-editing/IME/undo/table/embed checks.
-The trial must keep Plus and other delimiter renderers disabled so they do
-not override the native path. The core switch is process-wide, so choosing a
-test vault alone does not isolate the running application. No trial or
-persistent resource switch is performed by the supplied probe.
+The official application successfully loaded the patched resources. The
+[live trial](android/live-trial.json) passed 32 worker comparisons, 10 native
+reading checks including a table and embedded note, and real editor token,
+selection and undo checks. Both the [restore command](android/live-restore.json)
+and [complete process restart](android/live-restart.json) returned the actual
+served scripts to their original hashes.
+
+The helper never calls `persistServerBasePath` or automatically reapplies the
+trial on startup. Plus is temporarily disabled only if enabled at the start,
+and that recorded state is restored on return to the official resources.
+Other delimiter renderers must also be inactive. The core switch affects the
+whole app process. Desktop/iOS delivery and physical Android touch/IME behavior
+are not certified by these automatic checks.
 
 Obsidian's [current terms](https://obsidian.md/terms) restrict modification and
 redistribution of the application. This repository publishes only our adapter,
