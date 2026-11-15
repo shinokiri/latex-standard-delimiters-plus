@@ -7,14 +7,17 @@ It adds no custom math widget, preview panel, click mapping, CSS or input handle
 The note's source is never rewritten.
 
 **This directory is an evaluation, not a stable native delimiter release.**
-The Android subdirectory includes **Native Delimiters 0.2.0**, an installable
+The Android subdirectory includes **Native Delimiters 0.2.1**, an installable
 [daily loader](android/DAILY.md) inside the official signed application.
 It extends the historical non-persistent trial with direct cached startup,
 APK-local adaptation and externally recoverable persistent activation.
-The [daily verification](android/daily-verification.json) and
-[startup measurements](android/daily-startup.json) record the new scope.
-Full application startup, automatic native rendering/editor checks, explicit
-restore and complete process restart have passed on Android 1.14.4 / build 389.
+The [current verification](android/daily-verification-0.2.1.json) records
+the 1.15.1 / build 404 parser fix, native rendering/editor checks and a
+complete process restart with persistent cached activation. Offline native
+regression also covers 1.15.0 / build 396. The historical
+[0.2.0 verification](android/daily-verification.json) and
+[startup measurements](android/daily-startup.json) cover 1.14.4 / build 389,
+including explicit restore and external cache-removal recovery.
 After the 0.1.1 timeout fix, the user reported no issues in manual device use.
 The individual touch and IME scenarios were not separately enumerated.
 No modified Obsidian binary, extracted host code or private note is distributed.

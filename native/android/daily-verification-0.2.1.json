@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "date": "2026-11-15",
+  "version": "0.2.1",
+  "host": {
+    "id": "md.obsidian",
+    "version": "1.15.1",
+    "build": "404"
+  },
+  "adapter": "v2-5c02a682efc7081f",
+  "helperSha256": "9a101d158bdaf7424742d350ecff4ca93ca6724885939da0151ff63cec9b3c33",
+  "fix": {
+    "previousHelper": "0.2.0",
+    "previousError": "unsupported-native-structure:app:0:1",
+    "cause": "Obsidian 1.15.1 replaced prototype tokenizers with indexed rule tables and explicit parser/frame arguments.",
+    "previousSuccessfulAutomaticUpdate": {
+      "version": "1.15.0",
+      "build": "396",
+      "verifiedAt": "2026-11-05T09:36:01.128Z"
+    }
+  },
+  "javascriptTests": {
+    "total": 43,
+    "passed": 43,
+    "skipped": 0
+  },
+  "offlineNativeFixtures": [
+    {
+      "version": "1.15.1",
+      "build": "404",
+      "family": "indexed",
+      "appSourceSha256": "ffd620f9ee985cc4eb93ab25ba5871a33c9460b68035f2d74c8d4ddc2d43ef91",
+      "workerSourceSha256": "3854beb526277c067a9f2c20c2660f00e7064ac88f5a92c0fc1fe743a14da05c",
+      "pairs": 38,
+      "passed": 38
+    },
+    {
+      "version": "1.15.0",
+      "build": "396",
+      "family": "prototype",
+      "appSourceSha256": "2d9c8917f63fb7f4c042eabd8b1801f7c6877d18e81bc55c011c336a1aac144e",
+      "workerSourceSha256": "b440a04da734236d816befa208fa15ec514c80d5dd0d195e404615853d87fbe9",
+      "pairs": 38,
+      "passed": 38
+    }
+  ],
+  "offlineAssertions": [
+    "Insertion removal reproduces each original app/worker byte for byte.",
+    "Alias HTML matches native dollar HTML; native dollar sections and metadata remain unchanged.",
+    "Links, tags, headings and math ranges retain original source positions; code examples remain literal.",
+    "Paragraph, list, quote and footnote interruption are covered.",
+    "Missing, ambiguous or differently scoped native bindings are refused."
+  ],
+  "live": {
+    "dynamicBuildFromOwnInstalledAPK": true,
+    "workerPreflightPairs": 38,
+    "workerLivePairs": 38,
+    "nativeReadingChecks": 10,
+    "editorTokenParity": true,
+    "selectionMoves": 25,
+    "sourceUnchanged": true,
+    "nativeUndo": true,
+    "persistentColdStarts": 1,
+    "coldStartsRunFullCompatibilityChecks": false,
+    "startup": {
+      "source": "native-cache",
+      "timeOrigin": 1794702017978.3,
+      "readyAt": 1794702019643,
+      "pluginLoadedMs": 1396,
+      "layoutReadyMs": 1665,
+      "checkedMs": 1665,
+      "fullChecksRun": false
+    },
+    "automaticLoadingEnabled": true,
+    "persistent": true,
+    "debugPollingDisabledAfterSetup": true,
+    "oldCacheRemoved": true,
+    "unchangedSyntheticTestNotesRemoved": true,
+    "all324CachedResourceHashesVerified": true,
+    "timings": {
+      "adaptedMs": 1807,
+      "preparedMs": 9394,
+      "validationMs": 2448
+    }
+  },
+  "package": {
+    "distributesHostCode": false,
+    "requiresAPKToBuildHelper": false,
+    "stagedFiles": 324,
+    "stagedBytes": 22762722
+  },
+  "reports": [
+    "live-daily-0.2.1.json"
+  ],
+  "limits": [
+    "Physical device activation and restart tested on Android Obsidian 1.15.1/build 404; 1.15.0 is an offline recovered original fixture.",
+    "No new exhaustive touch/IME matrix; editor wrapper and native interaction implementations are unchanged.",
+    "One cached cold start does not establish a performance comparison; the 1665 ms metric starts at WebView navigation, not an icon tap.",
+    "External cache-removal recovery was tested in 0.2.0 and not repeated here; bootstrap and persistence mechanism unchanged.",
+    "Future unknown parser or container changes can still require another helper update.",
+    "Desktop and iOS activation are not implemented by this Android helper."
+  ],
+  "postLiveCodeChanges": []
+}

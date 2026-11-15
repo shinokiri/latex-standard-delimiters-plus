@@ -1,15 +1,17 @@
 # Native Delimiters — Android daily loader
 
 This loader gives the official Android application native recognition of
-`\(...\)` and `\[...\]`. It uses the same grammar adapter as the successful
-0.1.1 trial. Highlighting, rendering, editing and formula previews remain
-Obsidian's implementations. Notes keep their original delimiters.
+`\(...\)` and `\[...\]`. Version 0.2.1 supports both the original tokenizer
+API and the explicit-frame, character-indexed grammar introduced in 1.15.1.
+Highlighting, rendering, editing and formula previews remain Obsidian's
+implementations. Notes keep their original delimiters.
 
 The official APK, signature and update channel stay installed. The helper
 reads that app's own installed package locally; ordinary use needs neither
 Shizuku nor a network service. This is an internal-container integration,
-not a supported Obsidian extension API. Android 1.14.4 / build 389 is the
-device-validated host; future parser or container changes can still require
+not a supported Obsidian extension API. Version 0.2.1 is device-validated on
+Android Obsidian 1.15.1 / build 404, with offline regression against 1.15.0 /
+build 396; 0.2.0 was tested on 1.14.4 / build 389. Future parser or container changes can still require
 a helper update. This delivery does not implement desktop or iOS activation;
 it stays inactive there without changing Android deployment state.
 
@@ -30,7 +32,7 @@ state. Returning to an already running app does not rebuild anything.
 Local development request polling is disabled after setup and is opt-in
 for new installations.
 
-On the test phone, two cold process starts with official resources reached
+In the **0.2.0 / Obsidian 1.14.4** measurement, two cold process starts with official resources reached
 page initialization plus helper checks at **1,455 / 1,282 ms** after WebView
 navigation start; the persisted native cache reached the same measurement
 point at **1,381 / 1,209 ms**. These are not icon-tap-to-fully-rendered-page
@@ -52,8 +54,20 @@ package identity, including a reinstall with the same displayed version.
 A failed or interrupted attempt is blocked for that package/adapter
 combination. Official resources remain available. A different package or
 adapter can be tried automatically; a manual rebuild retries the current
-combination. This improves update handling, but cannot promise automatic
-compatibility with every future Obsidian release.
+combination. If an internal structure is unsupported, the message asks for
+a helper update: repeating a rebuild cannot teach the adapter a new parser.
+This improves update handling, but cannot promise automatic compatibility
+with every future Obsidian release.
+
+The 1.15.1 update replaced prototype tokenizers with character-indexed rule
+tables and explicit parser/frame arguments. Version 0.2.0 therefore stopped
+with `unsupported-native-structure:app:0:1`. Version 0.2.1 identifies the new
+constructor, native math functions, rule tables and paragraph/list/quote/
+footnote interrupt tables within the same lexical scope. It adds aliases
+before the native backslash-escape rule and commits native math nodes with
+the original source lengths. The dollar rules remain untouched. The older
+parser family remains supported; ambiguous or unrecognized structures
+still stop activation.
 
 ## Install and use
 
@@ -112,7 +126,8 @@ The cache is outside vaults, in the hidden shared-storage directory:
 ```
 
 It is local generated application data, not something to publish or sync
-with this repository. The 1.14.4 resource tree uses about 24.3 MiB.
+with this repository. The 1.15.1 resource tree uses about 21.7 MiB
+(the historical 1.14.4 tree used about 24.3 MiB).
 While replacing an existing cache, both copies may briefly exist; the old
 copy is removed after the new one passes its startup checks.
 
@@ -167,7 +182,19 @@ and the cached path that omits full checks. The patcher is tested with
 renamed bindings and changed formatting; these fixtures are compatibility
 simulations, not evidence of testing an unreleased official version.
 
-The [verification record](daily-verification.json) records 37 passing
+The current [0.2.1 verification record](daily-verification-0.2.1.json) records
+43 passing JavaScript tests, including the actual locally obtained 1.15.1
+and 1.15.0 app/worker fixtures. Each worker passed 38 alias/dollar pairs,
+unchanged dollar sections and metadata, original source positions and
+literal-code checks. Optional host tests are skipped without local fixtures.
+The [1.15.1 device report](live-daily-0.2.1.json) records 38 preflight pairs,
+38 live pairs, 10 reading/embedding checks, native editor token parity,
+25 selection moves and native undo. One complete process restart confirmed
+persistent activation with full checks skipped, reaching helper completion
+1,665 ms after WebView navigation start. This single sample is not a speed
+comparison. The installed and published helper are the same tested artifact.
+
+The historical [0.2.0 verification record](daily-verification.json) records 37 passing
 JavaScript tests, local APK extraction, 32 native worker pairs before
 activation, 32 live worker comparisons, 10 reading checks, native editor
 token parity, 25 selection moves and native undo. Two complete cold starts

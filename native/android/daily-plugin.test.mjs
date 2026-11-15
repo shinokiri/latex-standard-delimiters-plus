@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url);
 const identity = { host: { id: "md.obsidian", version: "1.14.4", build: "389" }, path: "/installed.apk", size: 12, mtime: 34 };
 const owned = "/storage/emulated/0/.obsidian-native-delimiters/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/public";
 async function instance({ native = false, failChecks = false, marker = null } = {}) {
-  const calls = [], store = new Map(marker ? [["native-lsd-recovery", JSON.stringify(marker)]] : []);
+  const calls = [], notices = [], store = new Map(marker ? [["native-lsd-recovery", JSON.stringify(marker)]] : []);
   const win = {
     Capacitor: { getPlatform: () => "android" },
     __nativeLsdDailyBoot: native ? { key: "test", info: Promise.resolve(identity.host),
@@ -16,7 +16,8 @@ async function instance({ native = false, failChecks = false, marker = null } = 
   const context = {
     module: { exports: {} }, __DAILY_RUNTIME__: "", __DAILY_ADAPTER__: "v2", __DAILY_VERSION__: "test",
     require(name) {
-      if (name === "obsidian") return { Notice: class {}, Modal: class {} };
+      if (name === "obsidian") return { Notice: class { constructor(message) { notices.push(message); } }, Modal: class {} };
+      if (name === "../tests/cases.ts") return { cases: [] };
       if (name === "./trial-plugin.cjs") return class {};
       if (name === "./daily-package.cjs") return { packageIdentity: async () => identity };
       if (name === "./daily-patch.cjs" || name === "./daily-bootstrap.cjs" || name === "./trial-checks.cjs") return {};
@@ -45,7 +46,7 @@ async function instance({ native = false, failChecks = false, marker = null } = 
       plugin.data.daily.tests = { passed: true };
     },
   });
-  return { plugin, calls, win };
+  return { plugin, calls, win, notices };
 }
 test("first installation with no recovery marker reaches official mode without an exception", async () => {
   const { plugin, calls } = await instance();
@@ -95,4 +96,11 @@ test("subsequent native boots omit full tests and do not edit or create test not
   await plugin.initialize();
   assert.deepEqual(calls, ["finish"]);
   assert.equal(plugin.data.daily.startup.fullChecksRun, false);
+});
+test("an unsupported parser asks for a helper update instead of a futile rebuild", async () => {
+  const { plugin, notices } = await instance();
+  await plugin.fail(Error("unsupported-native-structure:app:0:1"));
+  assert.match(notices.at(-1), /需要更新 Native Delimiters/);
+  assert.match(notices.at(-1), /重复重新适配无法解决/);
+  assert.equal(plugin.data.daily.phase, "blocked");
 });

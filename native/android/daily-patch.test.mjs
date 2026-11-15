@@ -24,3 +24,52 @@ test("unknown, ambiguous, malformed, and already patched bundles fail closed", (
   const result = patchSource(source("A"), "worker", runtime);
   assert.throws(() => patchSource(result.output, "worker", runtime), /already-patched/);
 });
+
+// Independently written fixture for the explicit-frame, char-indexed API.
+const indexedSource = prefix => `
+  const ZZParser = class {
+    constructor(source, options, blocks, inline) {}
+    point() {} toOffset() {} tokenizeBlock() {} tokenizeInline() {}
+  };
+  const ZZblock = (parser, frame, source, silent) =>
+    frame.eat(source).apply({type: "math", value: source});
+  const ZZinline = (parser, frame, source, silent) =>
+    frame.eat(source).apply({type: "inlineMath", value: source});
+  const ZZtext = () => {};
+  const ZZblocks = [{fn:ZZblock, block: (a,b) => b === 36}];
+  const ZZrules = [{fn:ZZinline,chars:"$"},{fn:ZZtext}];
+  const ZZlookup = lookup(ZZrules);
+  const ZZinterrupts = [ZZtext, ZZblock];
+  function ZZparse(source, options) {
+    const parser = new ZZParser(source, options, ZZblocks, ZZlookup);
+    return {type:"root", children:parser.tokenizeBlock(source), position:{end:parser.eof}};
+  }
+`.replaceAll("ZZ", prefix);
+test("indexed parser binds native rules, frame math and interrupt tables in the same scope", () => {
+  for (const prefix of ["a", "$renamed2027"]) {
+    const original = "(()=>{" + indexedSource(prefix) + "})();";
+    const result = patchSource(original, "worker", runtime);
+    assert.equal(result.grammar, "indexed");
+    assert.equal(removeInsertions(result.output, result.insertions), original);
+    assert.ok(result.output.includes("installIndexedGrammar(" + prefix + "blocks," + prefix +
+      "lookup," + prefix + "block," + prefix + "inline,[" + prefix + "interrupts])"));
+  }
+});
+test("indexed parser refuses missing interrupts, changed frames, unknown classes and ambiguous entry points", () => {
+  const source = indexedSource("a");
+  for (const changed of [
+    source.replace("const ainterrupts = [atext, ablock];", ""),
+    source.replaceAll(".apply(", ".differentCommit("),
+    source.replace("tokenizeInline() {}", "differentInline() {}"),
+    source + indexedSource("b"),
+    source.replace("const ablocks = [{fn:ablock", "const ablocks = [{fn:atext"),
+  ]) assert.throws(() => patchSource(changed, "worker", runtime), /unsupported-native-structure/);
+});
+test("a tokenizer in another lexical scope cannot supply a missing binding", () => {
+  const source = indexedSource("a").replace(
+    'const ablock = (parser, frame, source, silent) =>\n    frame.eat(source).apply({type: "math", value: source});', "");
+  assert.throws(() => patchSource(source + `
+    function unrelated() { const ablock = (p, frame, s, silent) =>
+      frame.eat(s).apply({type:"math"}); }
+  `, "worker", runtime), /unsupported-native-structure/);
+});

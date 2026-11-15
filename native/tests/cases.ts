@@ -41,4 +41,10 @@ cases.push(
   {name: "blank line in display", standard: "\\[\nx+1\n\ny+1\n\\]\n\nAfter", dollar: "$$\nx+1\n\ny+1\n$$\n\nAfter"},
   {name: "escaped dollar in body", standard: String.raw`Before \(\text{Price: \$5}\) after`, dollar: String.raw`Before $\text{Price: \$5}$ after`},
   {name: "multiple display blocks", standard: "\\[\nx\n\\]\n\n\\[\ny\n\\]", dollar: "$$\nx\n$$\n\n$$\ny\n$$"},
+  {name: "paragraph interrupted by display", standard: "Before\n\\[\nx\n\\]\nAfter", dollar: "Before\n$$\nx\n$$\nAfter"},
+  {name: "list interrupted by display", standard: "- Before\n  \\[\n  x\n  \\]\n  After", dollar: "- Before\n  $$\n  x\n  $$\n  After"},
+  {name: "quote interrupted by display", standard: "> Before\n> \\[\n> x\n> \\]\n> After", dollar: "> Before\n> $$\n> x\n> $$\n> After"},
+  {name: "footnote interrupted by display", standard: "Text[^a]\n\n[^a]: Before\n    \\[\n    x\n    \\]\n    After", dollar: "Text[^a]\n\n[^a]: Before\n    $$\n    x\n    $$\n    After"},
+  {name: "display followed by text", standard: "\\[x\\] after \\(y\\)", dollar: "$$x$$ after $y$"},
+  {name: "unclosed display", standard: "Before\n\n\\[\nx+1", dollar: "Before\n\n$$\nx+1"},
 );

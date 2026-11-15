@@ -12,7 +12,8 @@ for (const name of ["main.js", "manifest.json", "LICENSES.txt", "build-report.js
 }
 files[manifest.id + "/README.md"] = new Uint8Array(await readFile(resolve(import.meta.dirname, "DAILY.md")));
 files[manifest.id + "/NOTICE.md"] = new Uint8Array(await readFile(resolve(root, "NOTICE.md")));
-for (const name of ["daily-startup.json", "daily-verification.json", "live-daily.json", "live-daily-recovery.json", "live-package-read.json"]) {
+for (const name of ["daily-verification-0.2.1.json", "live-daily-0.2.1.json",
+  "daily-startup.json", "daily-verification.json", "live-daily.json", "live-daily-recovery.json", "live-package-read.json"]) {
   files[manifest.id + "/" + name] = new Uint8Array(await readFile(resolve(import.meta.dirname, name)));
 }
 const archive = `native-delimiters-${manifest.version}.zip`;

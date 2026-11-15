@@ -1,4 +1,6 @@
 import { withStandardDelimiters, type NativeMode } from "./native-mode";
+import { closingAt } from "./delimiter-boundary";
+export { installIndexedGrammar } from "./indexed-grammar";
 
 type MathNode = Record<string, unknown>;
 type Eat = ((text: string) => (node: MathNode) => unknown) & Record<string, unknown>;
@@ -15,15 +17,6 @@ type Grammar = {
 type ParserConstructor = {prototype: Grammar};
 const installed = new WeakSet<ParserConstructor>();
 const name = "nativeStandardMath";
-
-function closingAt(source: string, from: number, closing: string): number {
-  for (let at = from; at < source.length - 1; at++) {
-    if (source[at] !== "\\") continue;
-    if (source.slice(at, at + 2) === closing) return at;
-    at++;
-  }
-  return -1;
-}
 
 /** Let the original math tokenizer create its original node. Commit its
  * consumption against the real input so the host assigns original positions.

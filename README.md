@@ -8,8 +8,9 @@ This is a fork of [DicksonKam/latex-standard-delimiters](https://github.com/Dick
 
 On the `research/native-delimiters-1.14.4` branch, the separate
 [Native Delimiters daily loader](native/android/DAILY.md) adds grammar aliases
-inside the official Android app. Version 0.2.0 supports direct cached startup,
-local update adaptation and official-resource recovery. It remains an
+inside the official Android app. Version 0.2.1 adds support for the rewritten
+1.15.1 parser, retaining direct cached startup, local update adaptation and
+official-resource recovery. It remains an
 experimental Android delivery; the stable Plus release below is unchanged.
 
 ## Features

@@ -7,6 +7,7 @@ const { patchSource } = require("./daily-patch.cjs");
 const { installDailyGuard } = require("./daily-bootstrap.cjs");
 const { cacheRoot, ownedCache, samePackage, automaticDecision } = require("./daily-state.cjs");
 const { runChecks, compareWorkers } = require("./trial-checks.cjs");
+const { cases } = require("../tests/cases.ts");
 const RUNTIME = __DAILY_RUNTIME__;
 const ADAPTER = __DAILY_ADAPTER__;
 const PLUS = "latex-standard-delimiters-plus";
@@ -91,7 +92,11 @@ class NativeDelimiters extends Trial {
     await this.persist();
     await this.report();
     this.progress?.close(); this.progress = null;
-    new Notice("原生公式已暂停自动加载：" + this.data.error + "。可继续使用官方功能，或运行“重新适配当前 Obsidian”。", 12000);
+    const unsupported = /unsupported-native-structure|ambiguous-native-parser|Unsupported.*grammar|unsupported-html-entry/i.test(this.data.error);
+    const next = unsupported
+      ? "当前 Obsidian 的内部结构尚未受支持，需要更新 Native Delimiters 插件；重复重新适配无法解决。官方功能仍可正常使用。"
+      : "可继续使用官方功能，或运行“重新适配当前 Obsidian”。";
+    new Notice("原生公式已暂停自动加载：" + this.data.error + "。" + next, 12000);
     const boot = window.__nativeLsdDailyBoot;
     if (boot && ownedCache(d.path) && await this.currentPath() === d.path) {
       try { await this.saveOpenViews(); }
@@ -323,7 +328,7 @@ class NativeDelimiters extends Trial {
     }
     this.progress.update("正在比较标准 delimiter 与原生美元公式。");
     d.preflight = await compareWorkers(decode(pkg.assets.get("worker.js")), patched.worker.output, this.calls.signal);
-    if (d.preflight.total !== 32 || d.preflight.passed !== d.preflight.total) throw Error("new-version-worker-check-failed");
+    if (d.preflight.total !== cases.length || d.preflight.passed !== d.preflight.total) throw Error("new-version-worker-check-failed");
     const root = cacheRoot(this.app.vault.adapter.basePath || this.app.vault.adapter.getBasePath?.());
     if (ownedCache(d.path)) d.previousPath = d.path;
     d.path = root + "/" + crypto.randomUUID() + "/public";

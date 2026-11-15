@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { build } from "esbuild";
 const root = resolve(import.meta.dirname, "../..");
-const version = "0.2.0";
+const version = "0.2.1";
 const runtime = (await build({
   entryPoints: [resolve(root, "native/src/core-runtime.ts")],
   bundle: true, format: "iife", globalName: "__nativeLsd", write: false, minify: true, target: "es2022",
